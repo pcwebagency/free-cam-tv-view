@@ -7,6 +7,9 @@ Tutte le modifiche rilevanti del progetto sono documentate in questo file.
 ### Novità
 - Icona di layout nella barra in basso: OK apre la scelta tra 1, 4, 9 o 16 telecamere per pagina (▼ dalla griglia)
 - Interruttore «Aa» nella barra in basso per mostrare o nascondere i nomi delle telecamere
+- Switch LD/HD per singola telecamera: in griglia dal menu rapido (OK tenuto premuto), a schermo intero con ▲ ▼
+- Nuova grafica delle impostazioni e delle finestre di dialogo
+- Barra dei gruppi più compatta, con testo bianco sulla voce selezionata
 
 ### Correzioni
 - La voce selezionata nella barra dei gruppi non perde più l'evidenziazione

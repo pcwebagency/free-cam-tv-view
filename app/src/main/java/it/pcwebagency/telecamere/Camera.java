@@ -19,8 +19,10 @@ public class Camera {
     public String group = DEFAULT_GROUP;
 
     public static final String DEFAULT_GROUP = "Studio";
-    /** Qualità alta: flusso principale HD anche in griglia (standard: secondario in griglia). */
+    /** HD in griglia (flusso principale); altrimenti LD (flusso secondario). */
     public boolean highQuality = false;
+    /** HD a schermo intero; altrimenti LD. */
+    public boolean fullHd = true;
     /** Videocitofono Dahua (VTO): mostra l'apriporta a schermo intero. */
     public boolean door = false;
     /** Porta HTTP per i comandi CGI (apriporta, canali NVR). */
@@ -37,6 +39,7 @@ public class Camera {
         c.customUrl = customUrl;
         c.group = group;
         c.highQuality = highQuality;
+        c.fullHd = fullHd;
         c.door = door;
         c.httpPort = httpPort;
         return c;
@@ -49,6 +52,11 @@ public class Camera {
                 + "/cam/realmonitor?channel=" + channel + "&subtype=" + (hd ? 0 : 1);
     }
 
+    /** Stessa telecamera (per aggiornare le impostazioni salvate). */
+    public boolean sameAs(Camera o) {
+        return ip.equals(o.ip) && port == o.port && channel == o.channel && customUrl.equals(o.customUrl);
+    }
+
     public String label() {
         return name.isEmpty() ? ip + " ch" + channel : name;
     }
@@ -58,7 +66,7 @@ public class Camera {
                 .put("name", name).put("ip", ip).put("port", port)
                 .put("user", user).put("password", Crypto.encrypt(password))
                 .put("channel", channel).put("customUrl", customUrl)
-                .put("group", group).put("highQuality", highQuality)
+                .put("group", group).put("highQuality", highQuality).put("fullHd", fullHd)
                 .put("door", door).put("httpPort", httpPort);
     }
 
@@ -74,6 +82,7 @@ public class Camera {
         c.group = o.optString("group", DEFAULT_GROUP);
         if (c.group.isEmpty()) c.group = DEFAULT_GROUP;
         c.highQuality = o.optBoolean("highQuality", false);
+        c.fullHd = o.optBoolean("fullHd", true);
         c.door = o.optBoolean("door", false);
         c.httpPort = o.optInt("httpPort", 80);
         return c;

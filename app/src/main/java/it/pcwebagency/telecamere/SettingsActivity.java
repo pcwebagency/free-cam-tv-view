@@ -1,16 +1,12 @@
 package it.pcwebagency.telecamere;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.graphics.Color;
+
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -32,16 +28,20 @@ public class SettingsActivity extends Activity {
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(64, 32, 64, 32);
-        root.setBackgroundColor(0xFF121212);
+        root.setPadding(Ui.dp(this, 48), Ui.dp(this, 28), Ui.dp(this, 48), Ui.dp(this, 16));
+        root.setBackgroundColor(Ui.BG);
+        root.setClipChildren(false);
+        root.setClipToPadding(false);
 
-        TextView title = text("Impostazioni telecamere", 26);
-        root.addView(title);
+        root.addView(Ui.text(this, "Impostazioni", 26, Ui.TEXT, true));
+        root.addView(Ui.text(this, "Free Cam TV View · versione " + BuildConfig.VERSION_NAME, 13, Ui.TEXT_DIM, false),
+                Ui.margins(this, -2, -2, 0, 2, 0, 18));
 
         LinearLayout actions = new LinearLayout(this);
+        actions.setClipChildren(false);
         actions.addView(button("Cerca in rete", v -> search()));
-        actions.addView(button("Aggiungi manualmente", v -> edit(null)));
-        actions.addView(button("Stesse credenziali per tutte", v -> askCredentials(
+        actions.addView(button("Aggiungi", v -> edit(null)));
+        actions.addView(button("Credenziali per tutte", v -> askCredentials(
                 "Credenziali per tutte le telecamere", (u, p) -> {
                     for (Camera c : cams) {
                         c.user = u;
@@ -49,12 +49,16 @@ public class SettingsActivity extends Activity {
                     }
                     saveAndRefresh();
                 })));
-        actions.addView(button("Informazioni e aggiornamenti", v -> about()));
+        actions.addView(button("Info e aggiornamenti", v -> about()));
         root.addView(actions);
 
         list = new LinearLayout(this);
         list.setOrientation(LinearLayout.VERTICAL);
+        list.setClipChildren(false);
+        list.setPadding(Ui.dp(this, 4), 0, Ui.dp(this, 4), Ui.dp(this, 16));
         ScrollView scroll = new ScrollView(this);
+        scroll.setClipChildren(false);
+        scroll.setClipToPadding(false);
         scroll.addView(list);
         root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
         setContentView(root);
@@ -64,24 +68,45 @@ public class SettingsActivity extends Activity {
 
     private void refresh() {
         list.removeAllViews();
-        list.addView(text(cams.isEmpty() ? "\nNessuna telecamera: usa «Cerca in rete»."
-                : "\nTelecamere configurate (OK per modificare):", 18));
+        if (cams.isEmpty()) {
+            list.addView(Ui.text(this, "Nessuna telecamera configurata.\nUsa «Cerca in rete» oppure «Aggiungi».",
+                    16, Ui.TEXT_DIM, false), Ui.margins(this, -2, -2, 0, 28, 0, 0));
+            return;
+        }
         for (String group : CameraStore.groups(cams)) {
-            TextView header = text("\n" + group, 20);
-            header.setTextColor(0xFF64B5F6);
-            list.addView(header);
-            for (Camera c : CameraStore.filter(cams, group)) addCameraRow(c);
+            List<Camera> inGroup = CameraStore.filter(cams, group);
+            TextView header = Ui.text(this, group.toUpperCase() + "  ·  " + inGroup.size(), 12, 0xFF64B5F6, true);
+            header.setLetterSpacing(0.12f);
+            list.addView(header, Ui.margins(this, -2, -2, 4, 24, 0, 8));
+            for (Camera c : inGroup) addCameraRow(c);
         }
     }
 
+    /** Scheda di una telecamera: nome, dettagli ed etichette; OK apre la modifica. */
     private void addCameraRow(Camera c) {
-        String info = c.label() + "   —   " + (c.customUrl.isEmpty() ? c.ip + "  canale " + c.channel : c.customUrl)
-                + (c.highQuality ? "   · qualità alta" : "")
-                + (c.door ? "   · apriporta" : "")
-                + (c.password.isEmpty() ? "   ⚠ senza password" : "");
-        Button b = button(info, v -> edit(c));
-        b.setAllCaps(false);
-        list.addView(b, new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout card = new LinearLayout(this);
+        card.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        card.setPadding(Ui.dp(this, 20), Ui.dp(this, 12), Ui.dp(this, 16), Ui.dp(this, 12));
+        card.setBackground(Ui.focusable(this, Ui.SURFACE, Ui.SURFACE_FOCUS, 14, true));
+        card.setFocusable(true);
+        card.setClickable(true);
+        card.setOnClickListener(v -> edit(c));
+        Ui.zoomOnFocus(card, 1.015f);
+
+        LinearLayout texts = new LinearLayout(this);
+        texts.setOrientation(LinearLayout.VERTICAL);
+        texts.addView(Ui.text(this, c.label(), 16, Ui.TEXT, true));
+        String detail = c.customUrl.isEmpty() ? c.ip + "  ·  canale " + c.channel + "  ·  porta " + c.port : c.customUrl;
+        texts.addView(Ui.text(this, detail, 13, Ui.TEXT_DIM, false));
+        card.addView(texts, new LinearLayout.LayoutParams(0, -2, 1));
+
+        if (c.password.isEmpty()) card.addView(Ui.badge(this, "Senza password", Ui.WARN), Ui.margins(this, -2, -2, 8, 0, 0, 0));
+        if (c.highQuality) card.addView(Ui.badge(this, "HD in griglia", 0xFF81C784), Ui.margins(this, -2, -2, 8, 0, 0, 0));
+        if (!c.fullHd) card.addView(Ui.badge(this, "LD a schermo intero", Ui.TEXT_DIM), Ui.margins(this, -2, -2, 8, 0, 0, 0));
+        if (c.door) card.addView(Ui.badge(this, "Apriporta", 0xFF64B5F6), Ui.margins(this, -2, -2, 8, 0, 0, 0));
+        card.addView(Ui.text(this, "›", 24, Ui.TEXT_DIM, false), Ui.margins(this, -2, -2, 16, 0, 0, 0));
+
+        list.addView(card, Ui.margins(this, -1, -2, 0, 0, 0, 8));
     }
 
     private void saveAndRefresh() {
@@ -92,7 +117,7 @@ public class SettingsActivity extends Activity {
     // --- Ricerca automatica ---
 
     private void search() {
-        AlertDialog wait = new AlertDialog.Builder(this)
+        android.app.Dialog wait = new ModernDialog(this)
                 .setMessage("Ricerca di telecamere e NVR in corso…").setCancelable(false).show();
         new Thread(() -> {
             List<Discovery.Device> found = Discovery.scan(this);
@@ -105,7 +130,7 @@ public class SettingsActivity extends Activity {
 
     private void showResults(List<Discovery.Device> found) {
         if (found.isEmpty()) {
-            new AlertDialog.Builder(this).setMessage("Nessun dispositivo trovato in rete.")
+            new ModernDialog(this).setMessage("Nessun dispositivo trovato in rete.")
                     .setPositiveButton("OK", null).show();
             return;
         }
@@ -117,7 +142,7 @@ public class SettingsActivity extends Activity {
             items[i] = d.describe() + (already ? "  (già aggiunto)" : "");
             checked[i] = d.hasVideo() && !already;
         }
-        new AlertDialog.Builder(this)
+        new ModernDialog(this)
                 .setTitle("Dispositivi trovati: scegli quali aggiungere")
                 .setMultiChoiceItems(items, checked, (dlg, which, on) -> checked[which] = on)
                 .setPositiveButton("Aggiungi", (dlg, w) -> {
@@ -164,7 +189,7 @@ public class SettingsActivity extends Activity {
                 saveAndRefresh();
                 String done = "Aggiunti " + added.size() + " flussi video.";
                 if (errors.length() > 0) {
-                    new AlertDialog.Builder(this).setTitle(done)
+                    new ModernDialog(this).setTitle(done)
                             .setMessage("Canali NVR non letti, aggiunto solo il canale 1:\n" + errors)
                             .setPositiveButton("OK", null).show();
                 } else {
@@ -205,7 +230,7 @@ public class SettingsActivity extends Activity {
         LinearLayout form = form();
         EditText user = field(form, "Utente", "admin", false);
         EditText pass = field(form, "Password", "", true);
-        new AlertDialog.Builder(this).setTitle(message).setView(form)
+        new ModernDialog(this).setTitle(message).setView(form)
                 .setPositiveButton("OK", (d, w) -> cb.onCredentials(user.getText().toString().trim(), pass.getText().toString()))
                 .setNeutralButton("Più tardi", (d, w) -> cb.onCredentials("admin", ""))
                 .setNegativeButton("Annulla", null)
@@ -218,7 +243,7 @@ public class SettingsActivity extends Activity {
         EditText group = groupField(form, defaultGroup());
         EditText user = field(form, "Utente", "admin", false);
         EditText pass = field(form, "Password", "", true);
-        new AlertDialog.Builder(this).setTitle(message).setView(form)
+        new ModernDialog(this).setTitle(message).setView(form)
                 .setPositiveButton("OK", (d, w) -> cb.onConfirm(
                         user.getText().toString().trim(), pass.getText().toString(), groupName(group)))
                 .setNeutralButton("Password più tardi", (d, w) -> cb.onConfirm("admin", "", groupName(group)))
@@ -267,30 +292,25 @@ public class SettingsActivity extends Activity {
         form.addView(door);
         port.setInputType(InputType.TYPE_CLASS_NUMBER);
 
-        TextView qualityLabel = new TextView(this);
-        qualityLabel.setText("Qualità del flusso");
-        form.addView(qualityLabel);
-        RadioGroup quality = new RadioGroup(this);
-        RadioButton standard = new RadioButton(this);
-        standard.setText("Standard — griglia leggera, HD a schermo intero");
-        standard.setId(View.generateViewId());
-        RadioButton high = new RadioButton(this);
-        high.setText("Alta — HD anche in griglia (più carico per TV e rete)");
-        high.setId(View.generateViewId());
-        quality.addView(standard);
-        quality.addView(high);
-        quality.check(c.highQuality ? high.getId() : standard.getId());
-        form.addView(quality);
+        CheckBox gridHd = new CheckBox(this);
+        gridHd.setText("HD in griglia (più carico per TV e rete; altrimenti LD)");
+        gridHd.setChecked(c.highQuality);
+        form.addView(gridHd);
+        CheckBox fullHd = new CheckBox(this);
+        fullHd.setText("HD a schermo intero (altrimenti LD)");
+        fullHd.setChecked(c.fullHd);
+        form.addView(fullHd);
 
         ScrollView scroll = new ScrollView(this);
         scroll.addView(form);
-        AlertDialog.Builder b = new AlertDialog.Builder(this)
+        ModernDialog b = new ModernDialog(this)
                 .setTitle(isNew ? "Aggiungi telecamera o NVR" : "Modifica " + c.label())
                 .setView(scroll)
                 .setPositiveButton("Salva", (d, w) -> {
                     c.name = name.getText().toString().trim();
                     c.group = groupName(group);
-                    c.highQuality = quality.getCheckedRadioButtonId() == high.getId();
+                    c.highQuality = gridHd.isChecked();
+                    c.fullHd = fullHd.isChecked();
                     c.httpPort = parseInt(httpPort, 80);
                     c.door = door.isChecked();
                     c.ip = ip.getText().toString().trim();
@@ -321,7 +341,8 @@ public class SettingsActivity extends Activity {
                 t.user = user.getText().toString().trim();
                 t.password = pass.getText().toString();
                 t.group = groupName(group);
-                t.highQuality = quality.getCheckedRadioButtonId() == high.getId();
+                t.highQuality = gridHd.isChecked();
+                t.fullHd = fullHd.isChecked();
                 importNvr(t);
             });
             b.setNegativeButton("Annulla", null);
@@ -391,7 +412,7 @@ public class SettingsActivity extends Activity {
                     Toast.makeText(this, "Importati " + chans.size() + " canali", Toast.LENGTH_LONG).show();
                 });
             } catch (Exception e) {
-                runOnUiThread(() -> new AlertDialog.Builder(this).setTitle("Impossibile leggere i canali")
+                runOnUiThread(() -> new ModernDialog(this).setTitle("Impossibile leggere i canali")
                         .setMessage(t.ip + ":" + t.httpPort + " — " + e.getMessage()
                                 + "\n\nDa remoto, se la porta HTTP dell'NVR non è raggiungibile, inserisci i canali "
                                 + "a mano nel campo Canale (es. 1-8).")
@@ -413,7 +434,7 @@ public class SettingsActivity extends Activity {
                 + "Licenza Apache 2.0\n"
                 + "github.com/" + BuildConfig.GITHUB_REPO + "\n\n"
                 + "Controllo automatico degli aggiornamenti: " + (auto ? "attivo" : "disattivato");
-        new AlertDialog.Builder(this)
+        new ModernDialog(this)
                 .setTitle("Free Cam TV View")
                 .setMessage(msg)
                 .setPositiveButton("Controlla aggiornamenti", (d, w) -> Updater.check(this, true))
@@ -435,8 +456,8 @@ public class SettingsActivity extends Activity {
     }
 
     private EditText field(LinearLayout form, String label, String value, boolean password) {
-        TextView l = new TextView(this);
-        l.setText(label);
+        TextView l = Ui.text(this, label, 13, Ui.TEXT_DIM, false);
+        l.setPadding(0, Ui.dp(this, 10), 0, 0);
         form.addView(l);
         EditText e = new EditText(this);
         e.setSingleLine(true);
@@ -455,18 +476,9 @@ public class SettingsActivity extends Activity {
         }
     }
 
-    private TextView text(String s, int size) {
-        TextView t = new TextView(this);
-        t.setText(s);
-        t.setTextSize(size);
-        t.setTextColor(Color.WHITE);
-        return t;
-    }
-
-    private Button button(String label, android.view.View.OnClickListener l) {
-        Button b = new Button(this);
-        b.setText(label);
-        b.setOnClickListener(l);
+    private TextView button(String label, View.OnClickListener l) {
+        TextView b = Ui.pill(this, label, l);
+        b.setLayoutParams(Ui.margins(this, -2, -2, 0, 0, 12, 0));
         return b;
     }
 }

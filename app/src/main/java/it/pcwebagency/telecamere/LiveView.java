@@ -36,6 +36,7 @@ public class LiveView {
     private final PlayerView playerView;
     private final TextView status;
     private final TextView label;
+    private final TextView quality;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Camera cam;
     private final boolean hd;
@@ -78,6 +79,15 @@ public class LiveView {
         label.setPadding(16, 6, 16, 6);
         root.addView(label, new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START));
 
+        quality = new TextView(ctx);
+        quality.setText(isHd() ? "HD" : "LD");
+        quality.setTextColor(isHd() ? 0xFF81C784 : Color.LTGRAY);
+        quality.setTextSize(hd ? 14 : 11);
+        quality.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        quality.setBackgroundColor(0x99000000);
+        quality.setPadding(12, 4, 12, 4);
+        root.addView(quality, new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.END));
+
         status = new TextView(ctx);
         status.setTextColor(Color.LTGRAY);
         status.setTextSize(hd ? 20 : 14);
@@ -88,6 +98,12 @@ public class LiveView {
 
     public void setLabelVisible(boolean visible) {
         label.setVisibility(visible ? View.VISIBLE : View.GONE);
+        quality.setVisibility(visible ? View.VISIBLE : View.GONE);
+    }
+
+    /** Flusso principale (HD) o secondario (LD), secondo la scelta per griglia o schermo intero. */
+    public boolean isHd() {
+        return hd ? cam.fullHd : cam.highQuality;
     }
 
     /** Etichetta in basso a destra, es. il comando dell'apriporta. */
@@ -129,7 +145,7 @@ public class LiveView {
         RtspMediaSource source = new RtspMediaSource.Factory()
                 .setForceUseRtpTcp(true)
                 .setTimeoutMs(8000)
-                .createMediaSource(MediaItem.fromUri(cam.url(hd || cam.highQuality)));
+                .createMediaSource(MediaItem.fromUri(cam.url(isHd())));
         player.setMediaSource(source);
         player.setPlayWhenReady(true);
         player.prepare();

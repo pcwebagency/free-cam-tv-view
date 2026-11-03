@@ -79,6 +79,18 @@ public final class CameraStore {
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_NAMES, show).apply();
     }
 
+    /** Salva la qualità LD/HD di una telecamera senza toccare le altre. */
+    public static void updateQuality(Context ctx, Camera cam) {
+        List<Camera> all = load(ctx);
+        for (Camera c : all) {
+            if (c.sameAs(cam)) {
+                c.highQuality = cam.highQuality;
+                c.fullHd = cam.fullHd;
+            }
+        }
+        save(ctx, all);
+    }
+
     public static void save(Context ctx, List<Camera> list) {
         JSONArray arr = new JSONArray();
         try {

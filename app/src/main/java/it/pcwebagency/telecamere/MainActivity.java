@@ -62,7 +62,7 @@ public class MainActivity extends Activity {
         doorHint.setTextColor(Color.GRAY);
         doorHint.setTextSize(13);
         doorHint.setPadding(16, 4, 16, 6);
-        doorHint.setText("⏯ o OK tenuto premuto: apri porta");
+        doorHint.setText("OK tenuto premuto: LD/HD e opzioni");
         doorHint.setVisibility(View.GONE);
         bottom.addView(doorHint, new LinearLayout.LayoutParams(-2, -2));
         layoutButtons = new LinearLayout(this);
@@ -199,10 +199,10 @@ public class MainActivity extends Activity {
         boolean active = group.equals(selected);
         TextView t = new TextView(this);
         t.setText(label);
-        t.setTextSize(16);
-        t.setPadding(28, 8, 28, 8);
+        t.setTextSize(13);
+        t.setPadding(Ui.dp(this, 14), Ui.dp(this, 4), Ui.dp(this, 14), Ui.dp(this, 4));
         t.setFocusable(true);
-        t.setTextColor(active ? Color.WHITE : Color.GRAY);
+        t.setTextColor(Ui.textColors(active ? Color.WHITE : 0xFF8A8F98));
         t.setTypeface(null, active ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
         t.setBackground(focusedBackground());
         t.setOnClickListener(v -> {
@@ -264,7 +264,10 @@ public class MainActivity extends Activity {
                 lv.root.setOnFocusChangeListener((v, has) -> {
                     if (has) {
                         showBorder(v);
-                        doorHint.setVisibility(v.getTag() instanceof Camera ? View.VISIBLE : View.GONE);
+                        doorHint.setText(v.getTag() instanceof Camera
+                                ? "OK tenuto premuto: LD/HD e opzioni   ·   ⏯: apri porta"
+                                : "OK tenuto premuto: LD/HD e opzioni");
+                        doorHint.setVisibility(View.VISIBLE);
                     } else {
                         v.setBackgroundColor(Color.BLACK);
                         doorHint.setVisibility(View.GONE);
@@ -273,13 +276,11 @@ public class MainActivity extends Activity {
                 lv.root.setOnClickListener(v -> startActivity(
                         new Intent(this, PlayerActivity.class).putExtra(PlayerActivity.EXTRA_INDEX, idx)));
                 Camera cam = cams.get(idx);
-                if (cam.door) {
-                    lv.root.setTag(cam);
-                    lv.root.setOnLongClickListener(v -> {
-                        DoorOpener.ask(this, cam);
-                        return true;
-                    });
-                }
+                if (cam.door) lv.root.setTag(cam);
+                lv.root.setOnLongClickListener(v -> {
+                    quickMenu(cam, idx);
+                    return true;
+                });
                 row.addView(lv.root, lp);
                 views.add(lv);
                 if (first == null) first = lv.root;
@@ -295,6 +296,23 @@ public class MainActivity extends Activity {
         View firstTile = first;
         grid.post(firstTile::requestFocus);
         for (LiveView v : views) v.start();
+    }
+
+    /** Menu rapido di una telecamera (OK tenuto premuto): qualità LD/HD, schermo intero, apriporta. */
+    private void quickMenu(Camera cam, int idx) {
+        ModernDialog m = new ModernDialog(this)
+                .setTitle(cam.label())
+                .setMessage("Qualità in griglia: " + (cam.highQuality ? "HD (flusso principale)" : "LD (flusso secondario)"))
+                .setPositiveButton(cam.highQuality ? "Passa a LD" : "Passa a HD", (d, w) -> {
+                    cam.highQuality = !cam.highQuality;
+                    CameraStore.updateQuality(this, cam);
+                    show();
+                })
+                .setNeutralButton("Schermo intero", (d, w) -> startActivity(
+                        new Intent(this, PlayerActivity.class).putExtra(PlayerActivity.EXTRA_INDEX, idx)));
+        if (cam.door) m.setNegativeButton("Apri porta", (d, w) -> DoorOpener.ask(this, cam));
+        else m.setNegativeButton("Chiudi", null);
+        m.show();
     }
 
     /** Bordo blu sulla telecamera selezionata, che sparisce dopo {@link #BORDER_MS}. */

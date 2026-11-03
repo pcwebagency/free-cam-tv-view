@@ -1,7 +1,7 @@
 package it.pcwebagency.telecamere;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+
 import android.widget.Toast;
 
 /** Conferma e apertura della serratura di un videocitofono, condivisa da griglia e schermo intero. */
@@ -9,13 +9,12 @@ public final class DoorOpener {
     private DoorOpener() {}
 
     public static void ask(Activity activity, Camera cam) {
-        AlertDialog dialog = new AlertDialog.Builder(activity)
+        new ModernDialog(activity)
                 .setTitle("Apri porta — " + cam.label())
                 .setPositiveButton("Porta 1", (d, w) -> open(activity, cam, 1))
                 .setNeutralButton("Porta 2", (d, w) -> open(activity, cam, 2))
                 .setNegativeButton("Annulla", null)
                 .show();
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).requestFocus();
     }
 
     private static void open(Activity activity, Camera cam, int door) {

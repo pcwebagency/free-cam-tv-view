@@ -1,7 +1,7 @@
 package it.pcwebagency.telecamere;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -106,7 +106,7 @@ public final class Updater {
 
     private static void offer(Activity activity, Release r) {
         String notes = r.notes.trim().isEmpty() ? "" : "\n\n" + r.notes.trim();
-        new AlertDialog.Builder(activity)
+        new ModernDialog(activity)
                 .setTitle("Nuova versione " + r.version + " disponibile")
                 .setMessage("Versione installata: " + BuildConfig.VERSION_NAME + notes)
                 .setPositiveButton("Aggiorna ora", (d, w) -> download(activity, r))
@@ -116,7 +116,7 @@ public final class Updater {
 
     private static void download(Activity activity, Release r) {
         if (Build.VERSION.SDK_INT >= 26 && !activity.getPackageManager().canRequestPackageInstalls()) {
-            new AlertDialog.Builder(activity)
+            new ModernDialog(activity)
                     .setTitle("Permesso necessario")
                     .setMessage("Per installare l'aggiornamento consenti a «Free Cam TV View» di installare app "
                             + "(Fire TV: Impostazioni → La mia Fire TV → Opzioni sviluppatore → Installa app sconosciute), "
@@ -133,7 +133,7 @@ public final class Updater {
                     .show();
             return;
         }
-        AlertDialog wait = new AlertDialog.Builder(activity)
+        android.app.Dialog wait = new ModernDialog(activity)
                 .setMessage("Download della versione " + r.version + "…").setCancelable(false).show();
         new Thread(() -> {
             try {
@@ -168,7 +168,7 @@ public final class Updater {
     }
 
     private static void info(Activity activity, String title, String msg) {
-        new AlertDialog.Builder(activity).setTitle(title).setMessage(msg).setPositiveButton("OK", null).show();
+        new ModernDialog(activity).setTitle(title).setMessage(msg).setPositiveButton("OK", null).show();
     }
 
     /** Confronto numerico di versioni "1.2.10" > "1.2.9". */

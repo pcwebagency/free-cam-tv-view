@@ -45,13 +45,20 @@ public class PlayerActivity extends Activity {
         Camera cam = cams.get(index);
         live = new LiveView(this, cam, true);
         live.setLabelVisible(CameraStore.showNames(this));
-        if (cam.door) live.addHint("OK o ⏯: apri porta");
+        live.addHint("▲▼: " + (live.isHd() ? "passa a LD" : "passa a HD") + (cam.door ? "   ·   OK o ⏯: apri porta" : ""));
         setContentView(live.root);
         live.start();
     }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent e) {
+        if (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+            Camera cam = cams.get(index);
+            cam.fullHd = !cam.fullHd;
+            CameraStore.updateQuality(this, cam);
+            showCamera();
+            return true;
+        }
         if ((keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER
                 || keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) && cams.get(index).door) {
             DoorOpener.ask(this, cams.get(index));

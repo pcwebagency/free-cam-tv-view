@@ -22,7 +22,7 @@
 - **Aggiunta manuale** con IP o nome host (DDNS), porta, canale e URL RTSP personalizzato.
 - **Griglia live** da 1, 4, 9 o 16 riquadri con pagine, e **schermo intero HD** con audio.
 - **Gruppi** (es. *Studio*, *Casa*): barra di selezione **Tutte · Studio · Casa** nella schermata live.
-- **Qualità del flusso** per telecamera: *Standard* (flusso secondario in griglia, HD a schermo intero) o *Alta* (HD ovunque).
+- **Switch LD/HD** per ogni telecamera, separato per griglia e schermo intero, direttamente dal telecomando.
 - **Apriporta per videocitofoni Dahua** (VTO): due serrature, con conferma.
 - **Formato 16:9** fisso e centrato per tutte le telecamere.
 - **Aggiornamenti dall'app**: controllo automatico delle nuove versioni pubblicate nelle Releases di GitHub e installazione con un clic (*≡ Menu → Informazioni e aggiornamenti*).
@@ -79,14 +79,17 @@ Al primo avvio premi **OK → Cerca in rete**, seleziona i dispositivi, scegli i
 | Griglia | **OK** | Schermo intero |
 | Griglia | **◀ ▶** ai bordi | Pagina precedente / successiva |
 | Griglia | **▲** dalla prima riga | Barra dei gruppi |
-| Griglia | **⏯** o **OK tenuto premuto** | Apriporta (videocitofoni) |
+| Griglia | **OK tenuto premuto** | Menu rapido: LD/HD, schermo intero, apriporta |
+| Griglia | **⏯** | Apriporta (videocitofoni) |
+| Griglia | **▼** dall'ultima riga | Riquadri (1 · 4 · 9 · 16) e nomi (Aa) |
 | Schermo intero | **◀ ▶** | Telecamera precedente / successiva |
+| Schermo intero | **▲ ▼** | Passa da LD a HD e viceversa |
 | Schermo intero | **OK** o **⏯** | Apriporta (videocitofoni) |
 | Ovunque | **≡ Menu** | Impostazioni |
 
 ### Impostazioni di una telecamera
 
-Nome, gruppo, IP o nome host, porta RTSP, utente, password, canale, URL RTSP personalizzato, porta HTTP, qualità del flusso e apriporta.
+Nome, gruppo, IP o nome host, porta RTSP, utente, password, canale (anche più canali per gli NVR: `1-8`), URL RTSP personalizzato, porta HTTP, qualità LD/HD in griglia e a schermo intero, apriporta.
 
 ## Accesso da remoto
 
