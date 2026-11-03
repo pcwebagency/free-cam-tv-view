@@ -10,6 +10,7 @@ Tutte le modifiche rilevanti del progetto sono documentate in questo file.
 - Switch LD/HD per singola telecamera: in griglia dal menu rapido (OK tenuto premuto), a schermo intero con ▲ ▼
 - Nuova grafica delle impostazioni e delle finestre di dialogo
 - Barra dei gruppi più compatta, con testo bianco sulla voce selezionata
+- Dopo 5 secondi senza tasti premuti le barre spariscono e le telecamere vanno a tutto schermo; un tasto qualsiasi le fa ricomparire
 
 ### Correzioni
 - La voce selezionata nella barra dei gruppi non perde più l'evidenziazione

@@ -25,6 +25,8 @@ public class MainActivity extends Activity {
     private static final int[] LAYOUTS = {1, 4, 9, 16};
     private int pageSize = 4;
     private static final int BORDER_MS = 1000;
+    /** Dopo questo tempo senza tasti premuti spariscono le barre e la griglia va a tutto schermo. */
+    private static final int IDLE_MS = 5000;
 
     private final List<LiveView> views = new ArrayList<>();
     private List<Camera> cams = new ArrayList<>();
@@ -34,6 +36,9 @@ public class MainActivity extends Activity {
     private TextView footer;
     private TextView doorHint;
     private LinearLayout layoutButtons;
+    private LinearLayout bottom;
+    private boolean tabsWanted;
+    private final Runnable hideChrome = this::hideChrome;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private View bordered;
     private final Runnable hideBorder = () -> {
@@ -52,7 +57,7 @@ public class MainActivity extends Activity {
         grid = new LinearLayout(this);
         grid.setOrientation(LinearLayout.VERTICAL);
         root.addView(grid, new LinearLayout.LayoutParams(-1, 0, 1));
-        LinearLayout bottom = new LinearLayout(this);
+        bottom = new LinearLayout(this);
         footer = new TextView(this);
         footer.setTextColor(Color.GRAY);
         footer.setTextSize(13);
@@ -86,6 +91,7 @@ public class MainActivity extends Activity {
     protected void onPause() {
         super.onPause();
         handler.removeCallbacks(hideBorder);
+        handler.removeCallbacks(hideChrome);
         stopAll();
     }
 
@@ -100,7 +106,8 @@ public class MainActivity extends Activity {
         buildLayoutButtons();
 
         tabs.removeAllViews();
-        tabs.setVisibility(groups.size() > 1 ? View.VISIBLE : View.GONE);
+        tabsWanted = groups.size() > 1;
+        tabs.setVisibility(tabsWanted ? View.VISIBLE : View.GONE);
         if (groups.size() < 2) return;
         tabs.addView(tab("Tutte (" + all.size() + ")", CameraStore.ALL, selected));
         for (String g : groups) tabs.addView(tab(g + " (" + CameraStore.filter(all, g).size() + ")", g, selected));
@@ -214,6 +221,25 @@ public class MainActivity extends Activity {
         return t;
     }
 
+    /** Mostra le barre e riprogramma la modalità a tutto schermo. */
+    private void showChrome() {
+        tabs.setVisibility(tabsWanted ? View.VISIBLE : View.GONE);
+        bottom.setVisibility(View.VISIBLE);
+        handler.removeCallbacks(hideChrome);
+        handler.postDelayed(hideChrome, IDLE_MS);
+    }
+
+    private void hideChrome() {
+        View f = getCurrentFocus();
+        if (f != null && !isTile(f)) {
+            // si sta usando una barra: si riprova più tardi
+            handler.postDelayed(hideChrome, IDLE_MS);
+            return;
+        }
+        tabs.setVisibility(View.GONE);
+        bottom.setVisibility(View.GONE);
+    }
+
     private int pageCount() {
         return (cams.size() + pageSize - 1) / pageSize;
     }
@@ -296,6 +322,7 @@ public class MainActivity extends Activity {
         View firstTile = first;
         grid.post(firstTile::requestFocus);
         for (LiveView v : views) v.start();
+        showChrome();
     }
 
     /** Menu rapido di una telecamera (OK tenuto premuto): qualità LD/HD, schermo intero, apriporta. */
@@ -341,6 +368,14 @@ public class MainActivity extends Activity {
     @Override
     public boolean dispatchKeyEvent(KeyEvent e) {
         if (e.getAction() == KeyEvent.ACTION_DOWN) {
+            if (bottom.getVisibility() != View.VISIBLE) {
+                // primo tasto con le barre nascoste: le mostra soltanto (tranne OK, che apre la telecamera)
+                showChrome();
+                int k = e.getKeyCode();
+                if (k != KeyEvent.KEYCODE_DPAD_CENTER && k != KeyEvent.KEYCODE_ENTER) return true;
+            } else {
+                showChrome();
+            }
             switch (e.getKeyCode()) {
                 case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
                     View focused = getCurrentFocus();

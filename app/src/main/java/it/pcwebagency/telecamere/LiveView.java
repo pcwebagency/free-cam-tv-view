@@ -107,7 +107,7 @@ public class LiveView {
     }
 
     /** Etichetta in basso a destra, es. il comando dell'apriporta. */
-    public void addHint(String text) {
+    public TextView addHint(String text) {
         TextView hint = new TextView(ctx);
         hint.setText(text);
         hint.setTextColor(Color.WHITE);
@@ -115,6 +115,7 @@ public class LiveView {
         hint.setBackgroundColor(0x99000000);
         hint.setPadding(16, 6, 16, 6);
         root.addView(hint, new FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.END));
+        return hint;
     }
 
     public void start() {

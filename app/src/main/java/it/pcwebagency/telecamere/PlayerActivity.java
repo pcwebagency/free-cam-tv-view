@@ -17,6 +17,11 @@ public class PlayerActivity extends Activity {
     private List<Camera> cams;
     private int index;
     private LiveView live;
+    private android.view.View hint;
+    private final android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable hideHint = () -> {
+        if (hint != null) hint.setVisibility(android.view.View.GONE);
+    };
 
     @Override
     protected void onCreate(Bundle state) {
@@ -33,9 +38,23 @@ public class PlayerActivity extends Activity {
         if (!cams.isEmpty()) showCamera();
     }
 
+    /** L'indicazione dei comandi sparisce dopo 5 secondi e ricompare a ogni tasto. */
+    private void showHint() {
+        if (hint != null) hint.setVisibility(android.view.View.VISIBLE);
+        handler.removeCallbacks(hideHint);
+        handler.postDelayed(hideHint, 5000);
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent e) {
+        if (e.getAction() == KeyEvent.ACTION_DOWN) showHint();
+        return super.dispatchKeyEvent(e);
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
+        handler.removeCallbacks(hideHint);
         if (live != null) live.stop();
     }
 
@@ -45,9 +64,10 @@ public class PlayerActivity extends Activity {
         Camera cam = cams.get(index);
         live = new LiveView(this, cam, true);
         live.setLabelVisible(CameraStore.showNames(this));
-        live.addHint("▲▼: " + (live.isHd() ? "passa a LD" : "passa a HD") + (cam.door ? "   ·   OK o ⏯: apri porta" : ""));
+        hint = live.addHint("▲▼: " + (live.isHd() ? "passa a LD" : "passa a HD") + (cam.door ? "   ·   OK o ⏯: apri porta" : ""));
         setContentView(live.root);
         live.start();
+        showHint();
     }
 
     @Override
