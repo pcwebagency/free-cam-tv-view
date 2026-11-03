@@ -40,7 +40,7 @@ public class Camera {
     JSONObject toJson() throws JSONException {
         return new JSONObject()
                 .put("name", name).put("ip", ip).put("port", port)
-                .put("user", user).put("password", password)
+                .put("user", user).put("password", Crypto.encrypt(password))
                 .put("channel", channel).put("customUrl", customUrl)
                 .put("group", group).put("highQuality", highQuality)
                 .put("door", door).put("httpPort", httpPort);
@@ -52,7 +52,7 @@ public class Camera {
         c.ip = o.optString("ip");
         c.port = o.optInt("port", 554);
         c.user = o.optString("user", "admin");
-        c.password = o.optString("password");
+        c.password = Crypto.decrypt(o.optString("password"));
         c.channel = o.optInt("channel", 1);
         c.customUrl = o.optString("customUrl");
         c.group = o.optString("group", DEFAULT_GROUP);

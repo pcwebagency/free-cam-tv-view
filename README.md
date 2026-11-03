@@ -110,7 +110,7 @@ Nell'app si indicano il nome host DDNS e la porta esterna (es. `47554`). L'impor
 
 ## Sicurezza e privacy
 
-- Le credenziali sono salvate **solo sulla TV**, nella memoria privata dell'app. Non sono cifrate: usa un utente dedicato con permessi di sola visualizzazione dove possibile.
+- Le password sono salvate **solo sulla TV**, cifrate con una chiave AES-256 dell'**Android Keystore** che non lascia il dispositivo (Android 6.0 e successivi). Disinstallando l'app la chiave viene eliminata e le password vanno reinserite.
 - L'app non usa servizi esterni, analytics o cloud.
 - Con il port forwarding limita sempre l'accesso all'IP di origine e usa password robuste. Gli NVR Dahua bloccano l'account dopo ripetuti tentativi errati.
 

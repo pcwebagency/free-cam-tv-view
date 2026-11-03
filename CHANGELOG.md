@@ -7,6 +7,9 @@ Tutte le modifiche rilevanti del progetto sono documentate in questo file.
 ### Modifiche
 - L'app si chiama ora **Free Cam TV View** (nome, banner e menu Informazioni)
 
+### Sicurezza
+- Password delle telecamere cifrate con l'Android Keystore (AES-256-GCM); quelle già salvate vengono cifrate automaticamente
+
 ## [1.0.0] — 2026-11-03
 
 Prima versione pubblica.

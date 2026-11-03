@@ -23,11 +23,18 @@ public final class CameraStore {
     public static List<Camera> load(Context ctx) {
         List<Camera> list = new ArrayList<>();
         String json = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, "[]");
+        boolean plaintext = false;
         try {
             JSONArray arr = new JSONArray(json);
-            for (int i = 0; i < arr.length(); i++) list.add(Camera.fromJson(arr.getJSONObject(i)));
+            for (int i = 0; i < arr.length(); i++) {
+                String pw = arr.getJSONObject(i).optString("password");
+                plaintext |= !pw.isEmpty() && !Crypto.isEncrypted(pw);
+                list.add(Camera.fromJson(arr.getJSONObject(i)));
+            }
         } catch (JSONException ignored) {
         }
+        // password salvate in chiaro dalle versioni precedenti: si cifrano subito
+        if (plaintext && Crypto.isAvailable()) save(ctx, list);
         return list;
     }
 
