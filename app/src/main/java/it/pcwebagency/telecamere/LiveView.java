@@ -153,7 +153,7 @@ public class LiveView {
                     forceLd = true;
                     quality.setText("LD");
                     quality.setTextColor(Ui.WARN);
-                    status.setText("HD non supportato dalla TV per questa telecamera: mostrato LD");
+                    status.setText("Il flusso HD supera la risoluzione massima della TV: mostrato LD\n(imposta il flusso principale della telecamera a 1920×1080)");
                     status.setVisibility(View.VISIBLE);
                     handler.removeCallbacksAndMessages(null);
                     handler.postDelayed(LiveView.this::start, 500);
