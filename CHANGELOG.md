@@ -2,6 +2,12 @@
 
 Tutte le modifiche rilevanti del progetto sono documentate in questo file.
 
+## [1.0.2] — 2026-11-03
+
+### Novità
+- NVR: nel campo Canale si possono inserire più canali (`1-8` oppure `1,3,5`), con una voce creata per ciascuno; utile da remoto, dove l'import automatico non è disponibile
+- "Importa tutti i canali NVR" usa la porta HTTP e la porta RTSP indicate (funziona anche da remoto se la porta HTTP è inoltrata)
+
 ## [1.0.1] — 2026-11-03
 
 ### Modifiche

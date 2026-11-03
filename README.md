@@ -106,7 +106,7 @@ Esempio per router MikroTik:
     comment="RTSP NVR per app Free Cam TV View"
 ```
 
-Nell'app si indicano il nome host DDNS e la porta esterna (es. `47554`). L'import automatico dei canali NVR funziona solo in rete locale: da remoto i canali si aggiungono manualmente.
+Nell'app si indicano il nome host DDNS e la porta esterna (es. `47554`). Per un NVR remoto scrivi nel campo **Canale** tutti i canali da vedere, ad esempio `1-8`: viene creata una voce per ciascuno. In alternativa, inoltrando anche la porta HTTP dell'NVR, *Importa tutti i canali NVR* legge in automatico canali e nomi.
 
 ## Sicurezza e privacy
 

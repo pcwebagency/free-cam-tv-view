@@ -145,7 +145,7 @@ public class SettingsActivity extends Activity {
             for (Discovery.Device d : chosen) {
                 if (d.isRecorder()) {
                     try {
-                        for (DahuaApi.Channel ch : DahuaApi.channels(d.ip, u, p)) {
+                        for (DahuaApi.Channel ch : DahuaApi.channels(d.ip, 80, u, p)) {
                             String name = ch.name.isEmpty() ? "Canale " + ch.number : ch.name;
                             added.add(newCamera(name, d.ip, u, p, ch.number));
                         }
@@ -256,7 +256,8 @@ public class SettingsActivity extends Activity {
         EditText port = field(form, "Porta RTSP", String.valueOf(c.port), false);
         EditText user = field(form, "Utente", c.user, false);
         EditText pass = field(form, "Password", c.password, true);
-        EditText channel = field(form, "Canale (1 per le telecamere, 1…N per gli NVR)", String.valueOf(c.channel), false);
+        EditText channel = field(form, "Canale (1 per le telecamere; per gli NVR anche più canali: 1-8 oppure 1,3,5)",
+                String.valueOf(c.channel), false);
         EditText custom = field(form, "URL RTSP personalizzato (solo per altre marche, facoltativo)", c.customUrl, false);
         EditText httpPort = field(form, "Porta HTTP (apriporta e canali NVR)", String.valueOf(c.httpPort), false);
         httpPort.setInputType(InputType.TYPE_CLASS_NUMBER);
@@ -265,7 +266,6 @@ public class SettingsActivity extends Activity {
         door.setChecked(c.door);
         form.addView(door);
         port.setInputType(InputType.TYPE_CLASS_NUMBER);
-        channel.setInputType(InputType.TYPE_CLASS_NUMBER);
 
         TextView qualityLabel = new TextView(this);
         qualityLabel.setText("Qualità del flusso");
@@ -297,19 +297,33 @@ public class SettingsActivity extends Activity {
                     c.port = parseInt(port, 554);
                     c.user = user.getText().toString().trim();
                     c.password = pass.getText().toString();
-                    c.channel = Math.max(1, parseInt(channel, 1));
+                    List<Integer> chans = parseChannels(channel.getText().toString());
+                    if (chans.isEmpty()) {
+                        Toast.makeText(this, "Canale non valido: usa ad esempio 1, 1-8 oppure 1,3,5", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    c.channel = chans.get(0);
                     c.customUrl = custom.getText().toString().trim();
                     if (c.ip.isEmpty() && c.customUrl.isEmpty()) {
                         Toast.makeText(this, "Serve almeno l'indirizzo IP", Toast.LENGTH_LONG).show();
                         return;
                     }
                     if (isNew) cams.add(c);
+                    if (chans.size() > 1) addChannels(c, chans);
                     saveAndRefresh();
                 });
         if (isNew) {
-            b.setNeutralButton("Importa tutti i canali NVR", (d, w) -> importNvr(
-                    ip.getText().toString().trim(), user.getText().toString().trim(), pass.getText().toString(),
-                    groupName(group)));
+            b.setNeutralButton("Importa tutti i canali NVR", (d, w) -> {
+                Camera t = new Camera();
+                t.ip = ip.getText().toString().trim();
+                t.port = parseInt(port, 554);
+                t.httpPort = parseInt(httpPort, 80);
+                t.user = user.getText().toString().trim();
+                t.password = pass.getText().toString();
+                t.group = groupName(group);
+                t.highQuality = quality.getCheckedRadioButtonId() == high.getId();
+                importNvr(t);
+            });
             b.setNegativeButton("Annulla", null);
         } else {
             b.setNeutralButton("Elimina", (d, w) -> {
@@ -321,18 +335,56 @@ public class SettingsActivity extends Activity {
         b.show();
     }
 
-    private void importNvr(String ip, String user, String pass, String group) {
-        if (ip.isEmpty()) {
+    /**
+     * Più canali dello stesso NVR: {@code c} prende il primo, per gli altri si creano copie
+     * con lo stesso host, porte e credenziali. I nomi diventano "Nome 1", "Nome 2"…
+     */
+    private void addChannels(Camera c, List<Integer> chans) {
+        String base = c.name.isEmpty() ? "Canale" : c.name;
+        c.name = base + " " + chans.get(0);
+        int pos = cams.indexOf(c);
+        for (int i = 1; i < chans.size(); i++) {
+            Camera x = c.copy();
+            x.channel = chans.get(i);
+            x.name = base + " " + x.channel;
+            x.door = false;
+            cams.add(pos + i, x);
+        }
+        Toast.makeText(this, "Aggiunti " + chans.size() + " canali", Toast.LENGTH_LONG).show();
+    }
+
+    /** "1-8", "1,3,5", "2" → elenco di canali (1…128, al massimo 64). */
+    static List<Integer> parseChannels(String text) {
+        List<Integer> out = new ArrayList<>();
+        try {
+            for (String part : text.replace(" ", "").split(",")) {
+                if (part.isEmpty()) continue;
+                String[] r = part.split("-", 2);
+                int from = Integer.parseInt(r[0]), to = r.length > 1 ? Integer.parseInt(r[1]) : from;
+                for (int ch = from; ch <= to && out.size() < 64; ch++) {
+                    if (ch >= 1 && ch <= 128 && !out.contains(ch)) out.add(ch);
+                }
+            }
+        } catch (NumberFormatException e) {
+            return new ArrayList<>();
+        }
+        return out;
+    }
+
+    /** Legge i canali dall'NVR (CGI sulla porta HTTP) e crea una voce per ciascuno, copiando {@code t}. */
+    private void importNvr(Camera t) {
+        if (t.ip.isEmpty()) {
             Toast.makeText(this, "Inserisci l'indirizzo IP dell'NVR", Toast.LENGTH_LONG).show();
             return;
         }
         new Thread(() -> {
             try {
-                List<DahuaApi.Channel> chans = DahuaApi.channels(ip, user, pass);
+                List<DahuaApi.Channel> chans = DahuaApi.channels(t.ip, t.httpPort, t.user, t.password);
                 runOnUiThread(() -> {
                     for (DahuaApi.Channel ch : chans) {
-                        Camera c = newCamera(ch.name.isEmpty() ? "Canale " + ch.number : ch.name, ip, user, pass, ch.number);
-                        c.group = group;
+                        Camera c = t.copy();
+                        c.name = ch.name.isEmpty() ? "Canale " + ch.number : ch.name;
+                        c.channel = ch.number;
                         cams.add(c);
                     }
                     saveAndRefresh();
@@ -340,7 +392,10 @@ public class SettingsActivity extends Activity {
                 });
             } catch (Exception e) {
                 runOnUiThread(() -> new AlertDialog.Builder(this).setTitle("Impossibile leggere i canali")
-                        .setMessage(ip + ": " + e.getMessage()).setPositiveButton("OK", null).show());
+                        .setMessage(t.ip + ":" + t.httpPort + " — " + e.getMessage()
+                                + "\n\nDa remoto, se la porta HTTP dell'NVR non è raggiungibile, inserisci i canali "
+                                + "a mano nel campo Canale (es. 1-8).")
+                        .setPositiveButton("OK", null).show());
             }
         }).start();
     }

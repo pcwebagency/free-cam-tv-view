@@ -31,15 +31,16 @@ public final class DahuaApi {
     private DahuaApi() {}
 
     /** Canali dell'NVR; se il dispositivo lo supporta, solo quelli con una telecamera collegata. */
-    public static List<Channel> channels(String ip, String user, String pass) throws IOException {
-        String titles = get("http://" + ip + "/cgi-bin/configManager.cgi?action=getConfig&name=ChannelTitle", user, pass);
+    public static List<Channel> channels(String host, int httpPort, String user, String pass) throws IOException {
+        String base = "http://" + host + ":" + httpPort;
+        String titles = get(base + "/cgi-bin/configManager.cgi?action=getConfig&name=ChannelTitle", user, pass);
         List<Channel> all = new ArrayList<>();
         Matcher m = Pattern.compile("ChannelTitle\\[(\\d+)]\\.Name=(.*)").matcher(titles);
         while (m.find()) all.add(new Channel(Integer.parseInt(m.group(1)) + 1, m.group(2).trim()));
 
         Set<Integer> connected = new HashSet<>();
         try {
-            String states = get("http://" + ip
+            String states = get(base
                     + "/cgi-bin/LogicDeviceManager.cgi?action=getCameraState&uniqueChannels[0]=-1", user, pass);
             Matcher s = Pattern.compile("states\\[\\d+]\\.channel=(\\d+)\\s+states\\[\\d+]\\.connectionState=(\\w+)")
                     .matcher(states);

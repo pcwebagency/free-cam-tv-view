@@ -26,6 +26,22 @@ public class Camera {
     /** Porta HTTP per i comandi CGI (apriporta, canali NVR). */
     public int httpPort = 80;
 
+    public Camera copy() {
+        Camera c = new Camera();
+        c.name = name;
+        c.ip = ip;
+        c.port = port;
+        c.user = user;
+        c.password = password;
+        c.channel = channel;
+        c.customUrl = customUrl;
+        c.group = group;
+        c.highQuality = highQuality;
+        c.door = door;
+        c.httpPort = httpPort;
+        return c;
+    }
+
     public String url(boolean hd) {
         if (!customUrl.isEmpty()) return customUrl;
         String auth = user.isEmpty() ? "" : Uri.encode(user) + ":" + Uri.encode(password) + "@";
