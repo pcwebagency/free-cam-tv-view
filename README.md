@@ -20,7 +20,7 @@
 - **Ricerca automatica in rete** con il protocollo di discovery Dahua (DHIP), che riconosce modello e tipo (telecamera, NVR, videocitofono), più la scansione della porta RTSP per le telecamere di altre marche.
 - **Import dei canali NVR**: dopo le credenziali vengono aggiunti tutti i canali con una telecamera collegata, con i loro nomi.
 - **Aggiunta manuale** con IP o nome host (DDNS), porta, canale e URL RTSP personalizzato.
-- **Griglia live 2×2** con pagine se le telecamere sono più di quattro, e **schermo intero HD** con audio.
+- **Griglia live** da 1, 4, 9 o 16 riquadri con pagine, e **schermo intero HD** con audio.
 - **Gruppi** (es. *Studio*, *Casa*): barra di selezione **Tutte · Studio · Casa** nella schermata live.
 - **Qualità del flusso** per telecamera: *Standard* (flusso secondario in griglia, HD a schermo intero) o *Alta* (HD ovunque).
 - **Apriporta per videocitofoni Dahua** (VTO): due serrature, con conferma.
@@ -77,7 +77,7 @@ Al primo avvio premi **OK → Cerca in rete**, seleziona i dispositivi, scegli i
 |---|---|---|
 | Griglia | Frecce | Seleziona la telecamera |
 | Griglia | **OK** | Schermo intero |
-| Griglia | **◀ ▶** ai bordi, **⏪ ⏩** | Pagina precedente / successiva |
+| Griglia | **◀ ▶** ai bordi | Pagina precedente / successiva |
 | Griglia | **▲** dalla prima riga | Barra dei gruppi |
 | Griglia | **⏯** o **OK tenuto premuto** | Apriporta (videocitofoni) |
 | Schermo intero | **◀ ▶** | Telecamera precedente / successiva |

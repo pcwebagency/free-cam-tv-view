@@ -7,7 +7,7 @@ import android.graphics.PixelFormat;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 
-/** Icona di layout: griglia n×n di riquadri arrotondati (1, 4, 9 telecamere). */
+/** Icona di layout: griglia n×n di riquadri arrotondati (1, 4, 9, 16 telecamere). */
 public class GridIcon extends Drawable {
     private final int n;
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);

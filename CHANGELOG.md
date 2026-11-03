@@ -5,7 +5,8 @@ Tutte le modifiche rilevanti del progetto sono documentate in questo file.
 ## [1.0.3] — 2026-11-03
 
 ### Novità
-- Icone di layout nella barra in basso: 1, 4 o 9 telecamere per pagina (▼ dalla griglia)
+- Icona di layout nella barra in basso: OK apre la scelta tra 1, 4, 9 o 16 telecamere per pagina (▼ dalla griglia)
+- Interruttore «Aa» nella barra in basso per mostrare o nascondere i nomi delle telecamere
 
 ### Correzioni
 - La voce selezionata nella barra dei gruppi non perde più l'evidenziazione

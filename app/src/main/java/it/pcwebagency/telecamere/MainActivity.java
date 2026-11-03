@@ -12,15 +12,17 @@ import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ImageView;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/** Griglia live (1, 4 o 9 riquadri) delle telecamere del gruppo scelto, con pagine. */
+/** Griglia live (1, 4, 9 o 16 riquadri) delle telecamere del gruppo scelto, con pagine. */
 public class MainActivity extends Activity {
-    private static final int[] LAYOUTS = {1, 4, 9};
+    private static final int[] LAYOUTS = {1, 4, 9, 16};
     private int pageSize = 4;
     private static final int BORDER_MS = 1000;
 
@@ -64,7 +66,8 @@ public class MainActivity extends Activity {
         doorHint.setVisibility(View.GONE);
         bottom.addView(doorHint, new LinearLayout.LayoutParams(-2, -2));
         layoutButtons = new LinearLayout(this);
-        layoutButtons.setPadding(0, 2, 12, 4);
+        layoutButtons.setPadding(0, 0, 12, 0);
+        layoutButtons.setGravity(Gravity.CENTER_VERTICAL);
         bottom.addView(layoutButtons, new LinearLayout.LayoutParams(-2, -2));
         root.addView(bottom, new LinearLayout.LayoutParams(-1, -2));
         setContentView(root);
@@ -103,35 +106,79 @@ public class MainActivity extends Activity {
         for (String g : groups) tabs.addView(tab(g + " (" + CameraStore.filter(all, g).size() + ")", g, selected));
     }
 
-    /** Icone 1 · 4 · 9 riquadri nella barra in basso. */
+    /** Barra in basso: interruttore dei nomi e icona del layout attuale (OK apre la scelta 1 · 4 · 9 · 16). */
     private void buildLayoutButtons() {
         layoutButtons.removeAllViews();
-        int px = (int) (26 * getResources().getDisplayMetrics().density);
+        boolean names = CameraStore.showNames(this);
+        TextView namesToggle = new TextView(this);
+        namesToggle.setText("Aa");
+        namesToggle.setTextSize(11);
+        namesToggle.setTypeface(null, android.graphics.Typeface.BOLD);
+        namesToggle.setTextColor(names ? Color.WHITE : 0xFF666666);
+        namesToggle.setPaintFlags(names ? 0 : android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
+        namesToggle.setGravity(Gravity.CENTER);
+        namesToggle.setIncludeFontPadding(false);
+        namesToggle.setFocusable(true);
+        namesToggle.setContentDescription(names ? "Nascondi i nomi" : "Mostra i nomi");
+        namesToggle.setBackground(focusedBackground());
+        namesToggle.setOnClickListener(v -> {
+            CameraStore.setShowNames(this, !names);
+            for (LiveView lv : views) lv.setLabelVisible(!names);
+            buildLayoutButtons();
+            layoutButtons.getChildAt(0).requestFocus();
+        });
+        layoutButtons.addView(namesToggle, iconParams());
+        ImageView current = layoutIcon(pageSize, Color.WHITE);
+        current.setContentDescription("Riquadri: " + pageSize);
+        current.setOnClickListener(this::showLayoutPicker);
+        layoutButtons.addView(current, iconParams());
+    }
+
+    private void showLayoutPicker(View anchor) {
+        LinearLayout box = new LinearLayout(this);
+        box.setPadding(8, 8, 8, 8);
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xEE202124);
+        bg.setCornerRadius(12);
+        box.setBackground(bg);
+        PopupWindow popup = new PopupWindow(box, ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT, true);
+        View selected = null;
         for (int n : LAYOUTS) {
-            ImageView icon = new ImageView(this);
-            int side = (int) Math.round(Math.sqrt(n));
-            icon.setImageDrawable(new GridIcon(side, n == pageSize ? Color.WHITE : Color.GRAY));
-            icon.setPadding(10, 6, 10, 6);
-            icon.setFocusable(true);
+            ImageView icon = layoutIcon(n, n == pageSize ? Color.WHITE : Color.GRAY);
             icon.setContentDescription(n + " riquadri");
-            icon.setBackground(focusedBackground());
             icon.setOnClickListener(v -> {
+                popup.dismiss();
                 CameraStore.setLayout(this, n);
                 pageSize = n;
                 page = 0;
                 buildLayoutButtons();
                 show();
-                layoutButtons.getChildAt(indexOf(n)).requestFocus();
             });
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(px + 20, px + 12);
-            lp.leftMargin = 6;
-            layoutButtons.addView(icon, lp);
+            box.addView(icon, iconParams());
+            if (n == pageSize) selected = icon;
         }
+        box.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        popup.showAsDropDown(anchor, anchor.getWidth() - box.getMeasuredWidth(),
+                -anchor.getHeight() - box.getMeasuredHeight() - 8);
+        if (selected != null) selected.requestFocus();
     }
 
-    private static int indexOf(int layout) {
-        for (int i = 0; i < LAYOUTS.length; i++) if (LAYOUTS[i] == layout) return i;
-        return 0;
+    private ImageView layoutIcon(int n, int color) {
+        ImageView icon = new ImageView(this);
+        icon.setImageDrawable(new GridIcon((int) Math.round(Math.sqrt(n)), color));
+        icon.setPadding(7, 4, 7, 4);
+        icon.setFocusable(true);
+        icon.setBackground(focusedBackground());
+        return icon;
+    }
+
+    private LinearLayout.LayoutParams iconParams() {
+        int px = (int) (15 * getResources().getDisplayMetrics().density);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(px + 14, px + 8);
+        lp.gravity = Gravity.CENTER_VERTICAL;
+        lp.leftMargin = 6;
+        return lp;
     }
 
     private static StateListDrawable focusedBackground() {
@@ -210,6 +257,7 @@ public class MainActivity extends Activity {
                     continue;
                 }
                 LiveView lv = new LiveView(this, cams.get(idx), false);
+                lv.setLabelVisible(CameraStore.showNames(this));
                 lv.root.setFocusable(true);
                 lv.root.setPadding(6, 6, 6, 6);
                 lv.root.setBackgroundColor(Color.BLACK);
@@ -240,7 +288,7 @@ public class MainActivity extends Activity {
         String hint = "OK: schermo intero  ·  ≡ Menu: impostazioni";
         if (tabs.getVisibility() == View.VISIBLE) hint += "  ·  ▲ gruppi";
         hint += "  ·  ▼ riquadri";
-        if (pageCount() > 1) hint += "  ·  Pagina " + (page + 1) + "/" + pageCount() + " (◀ ▶ o ⏪ ⏩)";
+        if (pageCount() > 1) hint += "  ·  Pagina " + (page + 1) + "/" + pageCount() + " (◀ ▶)";
         footer.setText(hint);
         first.requestFocus();
         // dopo il layout, così il focus di default non finisce sulle icone della barra in basso

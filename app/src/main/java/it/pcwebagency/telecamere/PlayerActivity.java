@@ -44,6 +44,7 @@ public class PlayerActivity extends Activity {
         index = (index + cams.size()) % cams.size();
         Camera cam = cams.get(index);
         live = new LiveView(this, cam, true);
+        live.setLabelVisible(CameraStore.showNames(this));
         if (cam.door) live.addHint("OK o ⏯: apri porta");
         setContentView(live.root);
         live.start();

@@ -35,6 +35,7 @@ public class LiveView {
     private final Context ctx;
     private final PlayerView playerView;
     private final TextView status;
+    private final TextView label;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Camera cam;
     private final boolean hd;
@@ -69,7 +70,7 @@ public class LiveView {
         root.addView(frame);
         playerView = frame.findViewById(R.id.player);
 
-        TextView label = new TextView(ctx);
+        label = new TextView(ctx);
         label.setText(cam.label());
         label.setTextColor(Color.WHITE);
         label.setTextSize(hd ? 20 : 15);
@@ -83,6 +84,10 @@ public class LiveView {
         status.setGravity(Gravity.CENTER);
         status.setPadding(24, 24, 24, 24);
         root.addView(status, new FrameLayout.LayoutParams(-1, -2, Gravity.CENTER));
+    }
+
+    public void setLabelVisible(boolean visible) {
+        label.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
     /** Etichetta in basso a destra, es. il comando dell'apriporta. */
