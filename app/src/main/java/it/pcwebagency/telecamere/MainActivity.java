@@ -121,7 +121,7 @@ public class MainActivity extends Activity {
         namesToggle.setText("Aa");
         namesToggle.setTextSize(11);
         namesToggle.setTypeface(null, android.graphics.Typeface.BOLD);
-        namesToggle.setTextColor(names ? Color.WHITE : 0xFF666666);
+        namesToggle.setTextColor(Ui.textColors(names ? Color.WHITE : 0xFF666666));
         namesToggle.setPaintFlags(names ? 0 : android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
         namesToggle.setGravity(Gravity.CENTER);
         namesToggle.setIncludeFontPadding(false);
@@ -173,7 +173,11 @@ public class MainActivity extends Activity {
 
     private ImageView layoutIcon(int n, int color) {
         ImageView icon = new ImageView(this);
-        icon.setImageDrawable(new GridIcon((int) Math.round(Math.sqrt(n)), color));
+        int side = (int) Math.round(Math.sqrt(n));
+        icon.setImageDrawable(new GridIcon(side, color));
+        // bianca quando è selezionata (sfondo azzurro), altrimenti il suo colore
+        icon.setOnFocusChangeListener((v, has) ->
+                icon.setImageDrawable(new GridIcon(side, has ? Color.WHITE : color)));
         icon.setPadding(7, 4, 7, 4);
         icon.setFocusable(true);
         icon.setBackground(focusedBackground());
