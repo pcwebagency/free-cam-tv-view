@@ -14,6 +14,7 @@ Tutte le modifiche rilevanti del progetto sono documentate in questo file.
 
 ### Correzioni
 - La voce selezionata nella barra dei gruppi non perde più l'evidenziazione
+- Se il decoder della TV non riesce a riprodurre il flusso HD di una telecamera (es. H.265+ / Smart Codec Dahua) si passa automaticamente a LD con un avviso
 - Più telecamere H.265 (HEVC) in griglia: se il decoder hardware non ha istanze libere si usa il decoder software, invece di mostrare l'errore "Failed to initialize OMX…hevc"
 
 ## [1.0.2] — 2026-11-03

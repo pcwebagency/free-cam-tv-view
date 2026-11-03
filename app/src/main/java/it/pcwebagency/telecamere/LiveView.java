@@ -42,6 +42,8 @@ public class LiveView {
     private final boolean hd;
     private ExoPlayer player;
     private long lastPosition = -1;
+    /** Il decoder della TV non riesce a riprodurre il flusso HD: si usa LD finché la vista resta aperta. */
+    private boolean forceLd = false;
 
     /** Riavvia il flusso se non è partito o se l'immagine è ferma da {@link #WATCHDOG_MS}. */
     private final Runnable watchdog = new Runnable() {
@@ -103,7 +105,7 @@ public class LiveView {
 
     /** Flusso principale (HD) o secondario (LD), secondo la scelta per griglia o schermo intero. */
     public boolean isHd() {
-        return hd ? cam.fullHd : cam.highQuality;
+        return (hd ? cam.fullHd : cam.highQuality) && !forceLd;
     }
 
     /** Etichetta in basso a destra, es. il comando dell'apriporta. */
@@ -120,8 +122,10 @@ public class LiveView {
 
     public void start() {
         stop();
-        status.setText("Connessione…");
-        status.setVisibility(View.VISIBLE);
+        if (!forceLd) {
+            status.setText("Connessione…");
+            status.setVisibility(View.VISIBLE);
+        }
         DefaultLoadControl lowLatency = new DefaultLoadControl.Builder()
                 .setBufferDurationsMs(500, 2000, 250, 250)
                 .build();
@@ -134,12 +138,27 @@ public class LiveView {
         player.addListener(new Player.Listener() {
             @Override
             public void onPlaybackStateChanged(int state) {
-                if (state == Player.STATE_READY) status.setVisibility(View.GONE);
+                if (state == Player.STATE_READY && !forceLd) status.setVisibility(View.GONE);
+                else if (state == Player.STATE_READY) handler.postDelayed(() -> status.setVisibility(View.GONE), 4000);
                 else if (state == Player.STATE_ENDED) retry("Flusso terminato");
             }
 
             @Override
             public void onPlayerError(PlaybackException e) {
+                boolean decoder = e.errorCode == PlaybackException.ERROR_CODE_DECODING_FAILED
+                        || e.errorCode == PlaybackException.ERROR_CODE_DECODER_INIT_FAILED
+                        || e.errorCode == PlaybackException.ERROR_CODE_DECODING_FORMAT_EXCEEDS_CAPABILITIES;
+                if (decoder && isHd()) {
+                    // flusso principale non decodificabile su questa TV (es. H.265+ / Smart Codec): si passa a LD
+                    forceLd = true;
+                    quality.setText("LD");
+                    quality.setTextColor(Ui.WARN);
+                    status.setText("HD non supportato dalla TV per questa telecamera: mostrato LD");
+                    status.setVisibility(View.VISIBLE);
+                    handler.removeCallbacksAndMessages(null);
+                    handler.postDelayed(LiveView.this::start, 500);
+                    return;
+                }
                 retry(describe(e));
             }
         });
