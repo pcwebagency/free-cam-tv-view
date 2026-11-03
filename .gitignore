@@ -1,0 +1,22 @@
+# Gradle / Android Studio
+.gradle/
+build/
+/app/build/
+local.properties
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Firma delle release (mai su git)
+keystore.properties
+*.jks
+*.keystore
+
+# APK: si pubblicano nelle Releases di GitHub
+*.apk
+*.aab
+
+# macOS
+.DS_Store

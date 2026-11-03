@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Contenitore fisso 16:9 centrato: il video (anche il flusso secondario Dahua 704×576)
+     viene portato a 16:9 e il contenitore si adatta al riquadro con bande nere dove serve.
+     TextureView: i chip Amlogic hanno un solo strato video hardware, che con più SurfaceView
+     in griglia ne mostrerebbe uno solo. -->
+<androidx.media3.ui.AspectRatioFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/frame_16_9"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    app:resize_mode="fit">
+
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/player"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusable="false"
+        app:surface_type="texture_view"
+        app:use_controller="false"
+        app:resize_mode="fill"
+        app:shutter_background_color="@android:color/black" />
+</androidx.media3.ui.AspectRatioFrameLayout>

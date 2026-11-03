@@ -1,0 +1,24 @@
+Telecamere
+Copyright 2026 PC Web Agency - Ing. Carmine Palermo (www.pcwebagency.it)
+
+Questo prodotto è distribuito con licenza Apache License, Version 2.0 (vedi LICENSE).
+
+-------------------------------------------------------------------------------
+
+Questo prodotto include software sviluppato nell'ambito del progetto
+AndroidX Media3 (https://github.com/androidx/media), licenza Apache 2.0:
+
+  Copyright 2021 The Android Open Source Project
+
+Il modulo media3-exoplayer-rtsp (versione 1.4.1) è incluso in forma sorgente in
+app/src/main/java/androidx/media3/exoplayer/rtsp/ con le seguenti modifiche
+apportate da PC Web Agency:
+
+  - RtspClient.java: le risposte RTSP prive dell'header CSeq vengono abbinate
+    all'unica richiesta in attesa oppure segnalate come errore di riproduzione,
+    invece di causare un'eccezione non gestita (crash dell'applicazione).
+    Anche le richieste del server prive di CSeq vengono ignorate senza errore.
+
+  - RtspMessageUtil.java (removeUserInfo): la rimozione delle credenziali
+    dall'URI usa l'authority codificata e l'ultima "@", così password
+    contenenti "@" non vengono interpretate come parte del nome host.

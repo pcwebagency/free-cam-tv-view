@@ -1,0 +1,162 @@
+package it.pcwebagency.telecamere;
+
+import android.content.Context;
+import android.graphics.Color;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.TextView;
+
+import androidx.annotation.OptIn;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.PlaybackException;
+import androidx.media3.common.Player;
+import androidx.media3.common.util.UnstableApi;
+import androidx.media3.exoplayer.DefaultLoadControl;
+import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.rtsp.RtspMediaSource;
+import androidx.media3.ui.AspectRatioFrameLayout;
+import androidx.media3.ui.PlayerView;
+
+/** Riquadro con il flusso live di una telecamera, che si riconnette da solo se cade. */
+@OptIn(markerClass = UnstableApi.class)
+public class LiveView {
+    private static final int RETRY_MS = 5000;
+    /** Con password errata si riprova di rado: gli NVR Dahua bloccano l'account dopo pochi tentativi. */
+    private static final int AUTH_RETRY_MS = 120000;
+    private static final String AUTH_ERROR = "utente o password errati";
+    private static final int WATCHDOG_MS = 15000;
+
+    public final FrameLayout root;
+    private final Context ctx;
+    private final PlayerView playerView;
+    private final TextView status;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Camera cam;
+    private final boolean hd;
+    private ExoPlayer player;
+    private long lastPosition = -1;
+
+    /** Riavvia il flusso se non è partito o se l'immagine è ferma da {@link #WATCHDOG_MS}. */
+    private final Runnable watchdog = new Runnable() {
+        @Override
+        public void run() {
+            if (player == null) return;
+            long pos = player.getCurrentPosition();
+            if (player.getPlaybackState() != Player.STATE_READY || pos == lastPosition) {
+                retry("nessun segnale");
+                return;
+            }
+            lastPosition = pos;
+            handler.postDelayed(this, WATCHDOG_MS);
+        }
+    };
+
+    public LiveView(Context ctx, Camera cam, boolean hd) {
+        this.ctx = ctx;
+        this.cam = cam;
+        this.hd = hd;
+        root = new FrameLayout(ctx);
+        root.setBackgroundColor(Color.BLACK);
+
+        AspectRatioFrameLayout frame = (AspectRatioFrameLayout)
+                LayoutInflater.from(ctx).inflate(R.layout.player_view, root, false);
+        frame.setAspectRatio(16f / 9f);
+        root.addView(frame);
+        playerView = frame.findViewById(R.id.player);
+
+        TextView label = new TextView(ctx);
+        label.setText(cam.label());
+        label.setTextColor(Color.WHITE);
+        label.setTextSize(hd ? 20 : 15);
+        label.setBackgroundColor(0x99000000);
+        label.setPadding(16, 6, 16, 6);
+        root.addView(label, new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START));
+
+        status = new TextView(ctx);
+        status.setTextColor(Color.LTGRAY);
+        status.setTextSize(hd ? 20 : 14);
+        status.setGravity(Gravity.CENTER);
+        status.setPadding(24, 24, 24, 24);
+        root.addView(status, new FrameLayout.LayoutParams(-1, -2, Gravity.CENTER));
+    }
+
+    /** Etichetta in basso a destra, es. il comando dell'apriporta. */
+    public void addHint(String text) {
+        TextView hint = new TextView(ctx);
+        hint.setText(text);
+        hint.setTextColor(Color.WHITE);
+        hint.setTextSize(hd ? 18 : 13);
+        hint.setBackgroundColor(0x99000000);
+        hint.setPadding(16, 6, 16, 6);
+        root.addView(hint, new FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.END));
+    }
+
+    public void start() {
+        stop();
+        status.setText("Connessione…");
+        status.setVisibility(View.VISIBLE);
+        DefaultLoadControl lowLatency = new DefaultLoadControl.Builder()
+                .setBufferDurationsMs(500, 2000, 250, 250)
+                .build();
+        player = new ExoPlayer.Builder(ctx).setLoadControl(lowLatency).build();
+        player.setVolume(hd ? 1f : 0f);
+        playerView.setPlayer(player);
+        player.addListener(new Player.Listener() {
+            @Override
+            public void onPlaybackStateChanged(int state) {
+                if (state == Player.STATE_READY) status.setVisibility(View.GONE);
+                else if (state == Player.STATE_ENDED) retry("Flusso terminato");
+            }
+
+            @Override
+            public void onPlayerError(PlaybackException e) {
+                retry(describe(e));
+            }
+        });
+        RtspMediaSource source = new RtspMediaSource.Factory()
+                .setForceUseRtpTcp(true)
+                .setTimeoutMs(8000)
+                .createMediaSource(MediaItem.fromUri(cam.url(hd || cam.highQuality)));
+        player.setMediaSource(source);
+        player.setPlayWhenReady(true);
+        player.prepare();
+        lastPosition = -1;
+        handler.postDelayed(watchdog, WATCHDOG_MS);
+    }
+
+    private static String describe(PlaybackException e) {
+        String msg = "";
+        for (Throwable t = e; t != null; t = t.getCause()) if (t.getMessage() != null) msg = t.getMessage();
+        for (Throwable t = e; t != null; t = t.getCause())
+            if (t instanceof java.net.UnknownHostException) return "nome host non trovato: controlla l'indirizzo";
+        if (msg.contains(" 401")) return AUTH_ERROR;
+        if (msg.contains(" 400") || msg.contains(" 404") || msg.contains("non valida"))
+            return "flusso RTSP non supportato: controlla il percorso o usa un URL personalizzato";
+        if (e.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED
+                || e.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT)
+            return "dispositivo non raggiungibile in rete";
+        return msg.isEmpty() ? e.getErrorCodeName() : msg;
+    }
+
+    private void retry(String reason) {
+        boolean auth = reason.equals(AUTH_ERROR);
+        status.setText(reason + (auth ? "\ncorreggi la password nelle impostazioni (nuovo tentativo tra 2 minuti)"
+                : "\nnuovo tentativo tra pochi secondi…"));
+        status.setVisibility(View.VISIBLE);
+        handler.removeCallbacksAndMessages(null);
+        handler.postDelayed(this::start, auth ? AUTH_RETRY_MS : RETRY_MS);
+    }
+
+    public void stop() {
+        handler.removeCallbacksAndMessages(null);
+        if (player != null) {
+            playerView.setPlayer(null);
+            player.release();
+            player = null;
+        }
+    }
+}
