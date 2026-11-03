@@ -63,6 +63,10 @@ Scarica l'APK dalla pagina [Releases](../../releases).
 
 Abilita *App da origini sconosciute* e installa l'APK con l'app **Downloader** o da una chiavetta USB.
 
+### Aggiornamenti
+
+L'app controlla da sola le nuove versioni e propone l'aggiornamento all'avvio. Il controllo si può fare anche a mano da *≡ Menu → Informazioni e aggiornamenti*. Al primo aggiornamento Android chiede di consentire a «Telecamere» l'installazione di app (Fire TV: *Opzioni sviluppatore → Installa app sconosciute*).
+
 ## Utilizzo
 
 Al primo avvio premi **OK → Cerca in rete**, seleziona i dispositivi, scegli il gruppo e inserisci utente e password.
@@ -109,74 +113,6 @@ Nell'app si indicano il nome host DDNS e la porta esterna (es. `47554`). L'impor
 - Le credenziali sono salvate **solo sulla TV**, nella memoria privata dell'app. Non sono cifrate: usa un utente dedicato con permessi di sola visualizzazione dove possibile.
 - L'app non usa servizi esterni, analytics o cloud.
 - Con il port forwarding limita sempre l'accesso all'IP di origine e usa password robuste. Gli NVR Dahua bloccano l'account dopo ripetuti tentativi errati.
-
-## Compilazione
-
-Requisiti: **JDK 17** e **Android SDK** (platform 34).
-
-```bash
-git clone https://github.com/pcwebagency/telecamere-tv.git
-cd telecamere-tv
-echo "sdk.dir=$HOME/Library/Android/sdk" > local.properties   # percorso del tuo SDK
-./gradlew assembleDebug
-# APK: app/build/outputs/apk/debug/app-debug.apk
-```
-
-### Build di release firmata
-
-Crea una keystore (una volta sola) e il file `keystore.properties` nella cartella del progetto, che è escluso da git:
-
-```bash
-keytool -genkeypair -v -keystore release.jks -alias telecamere -keyalg RSA -keysize 2048 -validity 10000
-```
-
-```properties
-storeFile=release.jks
-storePassword=********
-keyAlias=telecamere
-keyPassword=********
-```
-
-```bash
-./gradlew assembleRelease
-# APK: app/build/outputs/apk/release/app-release.apk
-```
-
-Conserva la keystore: senza la stessa chiave le TV non accettano gli aggiornamenti dell'app.
-
-### Pubblicare un aggiornamento
-
-1. Aumenta `versionCode` e `versionName` in `app/build.gradle` e aggiorna il [CHANGELOG](CHANGELOG.md).
-2. `./gradlew assembleRelease`
-3. Crea su GitHub una release con tag `vX.Y.Z` (es. `v1.0.1`) e allega l'APK firmato.
-
-Le TV con il controllo automatico attivo propongono l'aggiornamento all'avvio. Il repository da cui l'app legge le release si imposta con `githubRepo` in `gradle.properties`.
-La prima volta Android chiede di consentire a «Telecamere» l'installazione di app (Fire TV: *Opzioni sviluppatore → Installa app sconosciute*).
-
-### Icone
-
-Icona e banner sono generati da [`art/genera_icone.py`](art/genera_icone.py) (richiede Pillow):
-
-```bash
-python3 art/genera_icone.py
-```
-
-## Struttura del progetto
-
-```
-app/src/main/java/it/pcwebagency/telecamere/
-├── MainActivity.java       griglia live, gruppi, paginazione
-├── PlayerActivity.java     schermo intero
-├── SettingsActivity.java   ricerca, aggiunta, modifica
-├── LiveView.java           riquadro video con riconnessione e watchdog
-├── Discovery.java          discovery Dahua DHIP + scansione RTSP
-├── DahuaApi.java           CGI Dahua con autenticazione digest (canali NVR, apriporta)
-├── DoorOpener.java         conferma e apertura serratura
-├── Camera.java / CameraStore.java   modello e salvataggio
-└── App.java                gestione errori del player
-app/src/main/java/androidx/media3/exoplayer/rtsp/   modulo RTSP Media3 con patch
-art/                        sorgenti di icona e banner
-```
 
 ## Note tecniche
 
