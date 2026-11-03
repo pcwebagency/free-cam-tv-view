@@ -2,6 +2,12 @@
 
 Tutte le modifiche rilevanti del progetto sono documentate in questo file.
 
+## [1.0.4] — 2026-11-03
+
+### Correzioni
+- Telecamere con flusso HD oltre la risoluzione gestita dal decoder della TV (es. 4K su TV 1080p): si usa automaticamente il flusso extra Dahua (subtype 2) e, se non disponibile, LD, con un avviso, invece di restare su «Connessione…»
+- Banner dell'app dichiarato anche sull'activity di avvio (visibile nei launcher Android TV)
+
 ## [1.0.3] — 2026-11-03
 
 ### Novità
@@ -14,7 +20,6 @@ Tutte le modifiche rilevanti del progetto sono documentate in questo file.
 
 ### Correzioni
 - La voce selezionata nella barra dei gruppi non perde più l'evidenziazione
-- Se il flusso HD supera la risoluzione gestita dal decoder della TV (es. telecamere 4K su TV 1080p) si prova automaticamente il flusso extra Dahua e, se non disponibile, LD, con un avviso
 - Più telecamere H.265 (HEVC) in griglia: se il decoder hardware non ha istanze libere si usa il decoder software, invece di mostrare l'errore "Failed to initialize OMX…hevc"
 
 ## [1.0.2] — 2026-11-03
