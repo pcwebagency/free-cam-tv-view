@@ -131,7 +131,7 @@ Dahua, Imou, Lorex, Amcrest, Amazon, Fire TV e Android sono marchi dei rispettiv
 
 ## Autore
 
-**PC Web Agency** — Ing. Carmine Palermo
+**PC Web Agency**
 [www.pcwebagency.it](https://www.pcwebagency.it) · info@pcwebagency.it
 
 Sviluppo software, consulenza informatica e servizi web per aziende, enti e professionisti.

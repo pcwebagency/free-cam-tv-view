@@ -406,7 +406,6 @@ public class SettingsActivity extends Activity {
         boolean auto = Updater.isAutoCheck(this);
         String msg = "Versione " + BuildConfig.VERSION_NAME + "\n\n"
                 + "Sviluppata da PC Web Agency\n"
-                + "Ing. Carmine Palermo\n"
                 + "www.pcwebagency.it · info@pcwebagency.it\n\n"
                 + "Credits\n"
                 + "• AndroidX Media3 — The Android Open Source Project (Apache 2.0)\n"
