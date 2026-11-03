@@ -11,15 +11,17 @@ import android.os.Looper;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/** Griglia live 2×2 delle telecamere del gruppo scelto, con pagine se sono più di quattro. */
+/** Griglia live (1, 4 o 9 riquadri) delle telecamere del gruppo scelto, con pagine. */
 public class MainActivity extends Activity {
-    private static final int PAGE_SIZE = 4;
+    private static final int[] LAYOUTS = {1, 4, 9};
+    private int pageSize = 4;
     private static final int BORDER_MS = 1000;
 
     private final List<LiveView> views = new ArrayList<>();
@@ -29,6 +31,7 @@ public class MainActivity extends Activity {
     private LinearLayout tabs;
     private TextView footer;
     private TextView doorHint;
+    private LinearLayout layoutButtons;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private View bordered;
     private final Runnable hideBorder = () -> {
@@ -60,6 +63,9 @@ public class MainActivity extends Activity {
         doorHint.setText("⏯ o OK tenuto premuto: apri porta");
         doorHint.setVisibility(View.GONE);
         bottom.addView(doorHint, new LinearLayout.LayoutParams(-2, -2));
+        layoutButtons = new LinearLayout(this);
+        layoutButtons.setPadding(0, 2, 12, 4);
+        bottom.addView(layoutButtons, new LinearLayout.LayoutParams(-2, -2));
         root.addView(bottom, new LinearLayout.LayoutParams(-1, -2));
         setContentView(root);
         Updater.autoCheck(this);
@@ -87,12 +93,59 @@ public class MainActivity extends Activity {
         String selected = CameraStore.selectedGroup(this);
         if (!selected.equals(CameraStore.ALL) && !groups.contains(selected)) selected = CameraStore.ALL;
         cams = CameraStore.filter(all, selected);
+        pageSize = CameraStore.layout(this);
+        buildLayoutButtons();
 
         tabs.removeAllViews();
         tabs.setVisibility(groups.size() > 1 ? View.VISIBLE : View.GONE);
         if (groups.size() < 2) return;
         tabs.addView(tab("Tutte (" + all.size() + ")", CameraStore.ALL, selected));
         for (String g : groups) tabs.addView(tab(g + " (" + CameraStore.filter(all, g).size() + ")", g, selected));
+    }
+
+    /** Icone 1 · 4 · 9 riquadri nella barra in basso. */
+    private void buildLayoutButtons() {
+        layoutButtons.removeAllViews();
+        int px = (int) (26 * getResources().getDisplayMetrics().density);
+        for (int n : LAYOUTS) {
+            ImageView icon = new ImageView(this);
+            int side = (int) Math.round(Math.sqrt(n));
+            icon.setImageDrawable(new GridIcon(side, n == pageSize ? Color.WHITE : Color.GRAY));
+            icon.setPadding(10, 6, 10, 6);
+            icon.setFocusable(true);
+            icon.setContentDescription(n + " riquadri");
+            icon.setBackground(focusedBackground());
+            icon.setOnClickListener(v -> {
+                CameraStore.setLayout(this, n);
+                pageSize = n;
+                page = 0;
+                buildLayoutButtons();
+                show();
+                layoutButtons.getChildAt(indexOf(n)).requestFocus();
+            });
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(px + 20, px + 12);
+            lp.leftMargin = 6;
+            layoutButtons.addView(icon, lp);
+        }
+    }
+
+    private static int indexOf(int layout) {
+        for (int i = 0; i < LAYOUTS.length; i++) if (LAYOUTS[i] == layout) return i;
+        return 0;
+    }
+
+    private static StateListDrawable focusedBackground() {
+        GradientDrawable focused = new GradientDrawable();
+        focused.setColor(0xFF2196F3);
+        focused.setCornerRadius(8);
+        StateListDrawable bg = new StateListDrawable();
+        bg.addState(new int[]{android.R.attr.state_focused}, focused);
+        return bg;
+    }
+
+    private boolean isTile(View v) {
+        for (LiveView lv : views) if (lv.root == v) return true;
+        return false;
     }
 
     private TextView tab(String label, String group, String selected) {
@@ -104,12 +157,7 @@ public class MainActivity extends Activity {
         t.setFocusable(true);
         t.setTextColor(active ? Color.WHITE : Color.GRAY);
         t.setTypeface(null, active ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
-        GradientDrawable focused = new GradientDrawable();
-        focused.setColor(0xFF2196F3);
-        focused.setCornerRadius(8);
-        StateListDrawable bg = new StateListDrawable();
-        bg.addState(new int[]{android.R.attr.state_focused}, focused);
-        t.setBackground(bg);
+        t.setBackground(focusedBackground());
         t.setOnClickListener(v -> {
             CameraStore.setSelectedGroup(this, group);
             page = 0;
@@ -120,7 +168,7 @@ public class MainActivity extends Activity {
     }
 
     private int pageCount() {
-        return (cams.size() + PAGE_SIZE - 1) / PAGE_SIZE;
+        return (cams.size() + pageSize - 1) / pageSize;
     }
 
     private void stopAll() {
@@ -145,8 +193,11 @@ public class MainActivity extends Activity {
             empty.requestFocus();
             return;
         }
-        int from = page * PAGE_SIZE, to = Math.min(cams.size(), from + PAGE_SIZE);
-        int count = to - from, cols = count == 1 ? 1 : 2, rows = (count + cols - 1) / cols;
+        int from = page * pageSize, to = Math.min(cams.size(), from + pageSize);
+        int gridCols = (int) Math.round(Math.sqrt(pageSize));
+        int count = to - from;
+        int cols = Math.min(gridCols, (int) Math.ceil(Math.sqrt(count)));
+        int rows = (count + cols - 1) / cols;
         View first = null;
         for (int r = 0; r < rows; r++) {
             LinearLayout row = new LinearLayout(this);
@@ -168,6 +219,7 @@ public class MainActivity extends Activity {
                         doorHint.setVisibility(v.getTag() instanceof Camera ? View.VISIBLE : View.GONE);
                     } else {
                         v.setBackgroundColor(Color.BLACK);
+                        doorHint.setVisibility(View.GONE);
                     }
                 });
                 lv.root.setOnClickListener(v -> startActivity(
@@ -187,9 +239,13 @@ public class MainActivity extends Activity {
         }
         String hint = "OK: schermo intero  ·  ≡ Menu: impostazioni";
         if (tabs.getVisibility() == View.VISIBLE) hint += "  ·  ▲ gruppi";
+        hint += "  ·  ▼ riquadri";
         if (pageCount() > 1) hint += "  ·  Pagina " + (page + 1) + "/" + pageCount() + " (◀ ▶ o ⏪ ⏩)";
         footer.setText(hint);
         first.requestFocus();
+        // dopo il layout, così il focus di default non finisce sulle icone della barra in basso
+        View firstTile = first;
+        grid.post(firstTile::requestFocus);
         for (LiveView v : views) v.start();
     }
 
@@ -242,14 +298,14 @@ public class MainActivity extends Activity {
                 case KeyEvent.KEYCODE_DPAD_UP:
                 case KeyEvent.KEYCODE_DPAD_DOWN:
                     View current = getCurrentFocus();
-                    if (current != null) showBorder(current);
+                    if (current != null && isTile(current)) showBorder(current);
                     break;
                 case KeyEvent.KEYCODE_DPAD_RIGHT:
                 case KeyEvent.KEYCODE_DPAD_LEFT:
                     View f = getCurrentFocus();
-                    if (f != null) showBorder(f);
+                    if (f != null && isTile(f)) showBorder(f);
                     boolean right = e.getKeyCode() == KeyEvent.KEYCODE_DPAD_RIGHT;
-                    if (pageCount() > 1 && f != null
+                    if (pageCount() > 1 && f != null && isTile(f)
                             && f.focusSearch(right ? View.FOCUS_RIGHT : View.FOCUS_LEFT) == null) {
                         changePage(right ? 1 : -1);
                         return true;

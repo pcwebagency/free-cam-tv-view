@@ -15,6 +15,7 @@ public final class CameraStore {
     private static final String PREFS = "telecamere";
     private static final String KEY = "cameras";
     private static final String KEY_GROUP = "selectedGroup";
+    private static final String KEY_LAYOUT = "layout";
     /** Valore del gruppo selezionato che mostra tutte le telecamere. */
     public static final String ALL = "";
 
@@ -58,6 +59,15 @@ public final class CameraStore {
 
     public static void setSelectedGroup(Context ctx, String group) {
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_GROUP, group).apply();
+    }
+
+    /** Telecamere per pagina nella griglia: 1, 4 o 9. */
+    public static int layout(Context ctx) {
+        return ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(KEY_LAYOUT, 4);
+    }
+
+    public static void setLayout(Context ctx, int perPage) {
+        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putInt(KEY_LAYOUT, perPage).apply();
     }
 
     public static void save(Context ctx, List<Camera> list) {

@@ -16,6 +16,7 @@ import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.DefaultLoadControl;
+import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.rtsp.RtspMediaSource;
 import androidx.media3.ui.AspectRatioFrameLayout;
@@ -102,7 +103,10 @@ public class LiveView {
         DefaultLoadControl lowLatency = new DefaultLoadControl.Builder()
                 .setBufferDurationsMs(500, 2000, 250, 250)
                 .build();
-        player = new ExoPlayer.Builder(ctx).setLoadControl(lowLatency).build();
+        // Fallback al decoder software: i chip Amlogic hanno poche istanze del decoder HEVC
+        // hardware e con più flussi H.265 in griglia quelli in più non si inizializzano.
+        DefaultRenderersFactory renderers = new DefaultRenderersFactory(ctx).setEnableDecoderFallback(true);
+        player = new ExoPlayer.Builder(ctx, renderers).setLoadControl(lowLatency).build();
         player.setVolume(hd ? 1f : 0f);
         playerView.setPlayer(player);
         player.addListener(new Player.Listener() {

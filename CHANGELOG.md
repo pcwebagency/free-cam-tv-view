@@ -2,6 +2,15 @@
 
 Tutte le modifiche rilevanti del progetto sono documentate in questo file.
 
+## [1.0.3] — 2026-11-03
+
+### Novità
+- Icone di layout nella barra in basso: 1, 4 o 9 telecamere per pagina (▼ dalla griglia)
+
+### Correzioni
+- La voce selezionata nella barra dei gruppi non perde più l'evidenziazione
+- Più telecamere H.265 (HEVC) in griglia: se il decoder hardware non ha istanze libere si usa il decoder software, invece di mostrare l'errore "Failed to initialize OMX…hevc"
+
 ## [1.0.2] — 2026-11-03
 
 ### Novità
