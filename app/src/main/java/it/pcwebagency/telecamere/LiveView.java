@@ -11,7 +11,10 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import androidx.annotation.OptIn;
+import androidx.media3.common.C;
+import androidx.media3.common.Format;
 import androidx.media3.common.MediaItem;
+import androidx.media3.common.Tracks;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.common.util.UnstableApi;
@@ -42,7 +45,11 @@ public class LiveView {
     private final boolean hd;
     private ExoPlayer player;
     private long lastPosition = -1;
-    /** Il decoder della TV non riesce a riprodurre il flusso HD: si usa LD finché la vista resta aperta. */
+    /**
+     * Ripiego quando il decoder della TV non riesce a riprodurre il flusso HD (es. 4K oltre il
+     * limite 1080p): 0 flusso principale, 1 flusso extra Dahua (subtype 2), 2 LD.
+     */
+    private int hdStage = 0;
     private boolean forceLd = false;
 
     /** Riavvia il flusso se non è partito o se l'immagine è ferma da {@link #WATCHDOG_MS}. */
@@ -122,7 +129,7 @@ public class LiveView {
 
     public void start() {
         stop();
-        if (!forceLd) {
+        if (hdStage == 0) {
             status.setText("Connessione…");
             status.setVisibility(View.VISIBLE);
         }
@@ -138,9 +145,27 @@ public class LiveView {
         player.addListener(new Player.Listener() {
             @Override
             public void onPlaybackStateChanged(int state) {
-                if (state == Player.STATE_READY && !forceLd) status.setVisibility(View.GONE);
-                else if (state == Player.STATE_READY) handler.postDelayed(() -> status.setVisibility(View.GONE), 4000);
+                if (state == Player.STATE_READY && hdStage == 0) status.setVisibility(View.GONE);
+                else if (state == Player.STATE_READY) {
+                    if (hdStage == 1) status.setText("HD tramite il flusso extra della telecamera");
+                    handler.postDelayed(() -> status.setVisibility(View.GONE), 4000);
+                }
                 else if (state == Player.STATE_ENDED) retry("Flusso terminato");
+            }
+
+            @Override
+            public void onTracksChanged(Tracks tracks) {
+                // un flusso oltre il limite del decoder hardware finirebbe sul decoder software,
+                // troppo lento per il live: si cambia flusso subito, senza attendere un errore
+                if (!isHd() || !cam.customUrl.isEmpty()) return;
+                for (Tracks.Group g : tracks.getGroups()) {
+                    if (g.getType() != C.TRACK_TYPE_VIDEO) continue;
+                    Format f = g.getTrackFormat(0);
+                    if (f.sampleMimeType != null && f.width > 0
+                            && !Decoders.hardwareSupports(f.sampleMimeType, f.width, f.height)) {
+                        handler.post(LiveView.this::fallbackHd);
+                    }
+                }
             }
 
             @Override
@@ -148,15 +173,8 @@ public class LiveView {
                 boolean decoder = e.errorCode == PlaybackException.ERROR_CODE_DECODING_FAILED
                         || e.errorCode == PlaybackException.ERROR_CODE_DECODER_INIT_FAILED
                         || e.errorCode == PlaybackException.ERROR_CODE_DECODING_FORMAT_EXCEEDS_CAPABILITIES;
-                if (decoder && isHd()) {
-                    // flusso principale non decodificabile su questa TV (es. H.265+ / Smart Codec): si passa a LD
-                    forceLd = true;
-                    quality.setText("LD");
-                    quality.setTextColor(Ui.WARN);
-                    status.setText("Il flusso HD supera la risoluzione massima della TV: mostrato LD\n(imposta il flusso principale della telecamera a 1920×1080)");
-                    status.setVisibility(View.VISIBLE);
-                    handler.removeCallbacksAndMessages(null);
-                    handler.postDelayed(LiveView.this::start, 500);
+                if (isHd() && cam.customUrl.isEmpty() && (decoder || hdStage == 1)) {
+                    fallbackHd();
                     return;
                 }
                 retry(describe(e));
@@ -165,12 +183,29 @@ public class LiveView {
         RtspMediaSource source = new RtspMediaSource.Factory()
                 .setForceUseRtpTcp(true)
                 .setTimeoutMs(8000)
-                .createMediaSource(MediaItem.fromUri(cam.url(isHd())));
+                .createMediaSource(MediaItem.fromUri(cam.url(!isHd() ? 1 : hdStage == 1 ? 2 : 0)));
         player.setMediaSource(source);
         player.setPlayWhenReady(true);
         player.prepare();
         lastPosition = -1;
         handler.postDelayed(watchdog, WATCHDOG_MS);
+    }
+
+    /** Flusso HD non riproducibile: prima il flusso extra Dahua, poi LD. */
+    private void fallbackHd() {
+        if (hdStage == 0) {
+            hdStage = 1;
+            status.setText("Il flusso HD supera la risoluzione massima della TV: provo il flusso extra…");
+        } else {
+            hdStage = 2;
+            forceLd = true;
+            quality.setText("LD");
+            quality.setTextColor(Ui.WARN);
+            status.setText("HD non riproducibile su questa TV: mostrato LD\n(imposta il flusso extra o principale della telecamera a 1920×1080)");
+        }
+        status.setVisibility(View.VISIBLE);
+        handler.removeCallbacksAndMessages(null);
+        handler.postDelayed(this::start, 300);
     }
 
     private static String describe(PlaybackException e) {

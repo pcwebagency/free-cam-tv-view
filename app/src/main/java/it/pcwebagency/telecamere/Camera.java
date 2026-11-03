@@ -46,10 +46,15 @@ public class Camera {
     }
 
     public String url(boolean hd) {
+        return url(hd ? 0 : 1);
+    }
+
+    /** Flusso Dahua: 0 principale, 1 secondario, 2 extra (terzo flusso, spesso a 1080p/720p). */
+    public String url(int subtype) {
         if (!customUrl.isEmpty()) return customUrl;
         String auth = user.isEmpty() ? "" : Uri.encode(user) + ":" + Uri.encode(password) + "@";
         return "rtsp://" + auth + ip + ":" + port
-                + "/cam/realmonitor?channel=" + channel + "&subtype=" + (hd ? 0 : 1);
+                + "/cam/realmonitor?channel=" + channel + "&subtype=" + subtype;
     }
 
     /** Stessa telecamera (per aggiornare le impostazioni salvate). */
