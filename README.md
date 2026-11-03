@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="art/banner.png" alt="Telecamere" width="480">
+  <img src="art/banner.png" alt="Free Cam TV View" width="480">
 </p>
 
-<h1 align="center">Telecamere</h1>
+<h1 align="center">Free Cam TV View</h1>
 
 <p align="center">
   Visualizzazione live di telecamere IP, NVR e videocitofoni Dahua su Android TV e Amazon Fire TV.<br>
@@ -11,9 +11,9 @@
 
 ---
 
-**Telecamere** è un'app per Android TV e Fire TV, leggera e pensata per il telecomando, che mostra in tempo reale le telecamere della rete locale o di sedi remote. Riconosce automaticamente i dispositivi Dahua (telecamere IP, NVR/XVR, videocitofoni) e accetta qualsiasi flusso RTSP standard.
+**Free Cam TV View** è un'app per Android TV e Fire TV, leggera e pensata per il telecomando, che mostra in tempo reale le telecamere della rete locale o di sedi remote. Riconosce automaticamente i dispositivi Dahua (telecamere IP, NVR/XVR, videocitofoni) e accetta qualsiasi flusso RTSP standard.
 
-> *English summary — Telecamere is a lightweight Android TV / Fire TV app to watch Dahua IP cameras, NVRs and video intercoms (plus any RTSP stream) live, with automatic network discovery, camera groups, remote-friendly controls and a door-open button for Dahua VTO intercoms.*
+> *English summary — Free Cam TV View is a lightweight Android TV / Fire TV app to watch Dahua IP cameras, NVRs and video intercoms (plus any RTSP stream) live, with automatic network discovery, camera groups, remote-friendly controls and a door-open button for Dahua VTO intercoms.*
 
 ## Funzionalità
 
@@ -56,7 +56,7 @@ Scarica l'APK dalla pagina [Releases](../../releases).
 2. Dal computer:
    ```bash
    adb connect IP_DELLA_TV:5555        # conferma "Consenti" sulla TV
-   adb install -r Telecamere-1.0.0.apk
+   adb install -r FreeCamTVView-1.0.1.apk
    ```
 
 ### Senza computer
@@ -65,7 +65,7 @@ Abilita *App da origini sconosciute* e installa l'APK con l'app **Downloader** o
 
 ### Aggiornamenti
 
-L'app controlla da sola le nuove versioni e propone l'aggiornamento all'avvio. Il controllo si può fare anche a mano da *≡ Menu → Informazioni e aggiornamenti*. Al primo aggiornamento Android chiede di consentire a «Telecamere» l'installazione di app (Fire TV: *Opzioni sviluppatore → Installa app sconosciute*).
+L'app controlla da sola le nuove versioni e propone l'aggiornamento all'avvio. Il controllo si può fare anche a mano da *≡ Menu → Informazioni e aggiornamenti*. Al primo aggiornamento Android chiede di consentire a «Free Cam TV View» l'installazione di app (Fire TV: *Opzioni sviluppatore → Installa app sconosciute*).
 
 ## Utilizzo
 
@@ -103,7 +103,7 @@ Esempio per router MikroTik:
 /ip firewall nat add chain=dstnat in-interface-list=WAN protocol=tcp \
     src-address=IP_PUBBLICO_SEDE dst-port=47554 \
     action=dst-nat to-addresses=IP_LOCALE_NVR to-ports=554 \
-    comment="RTSP NVR per app Telecamere"
+    comment="RTSP NVR per app Free Cam TV View"
 ```
 
 Nell'app si indicano il nome host DDNS e la porta esterna (es. `47554`). L'import automatico dei canali NVR funziona solo in rete locale: da remoto i canali si aggiungono manualmente.

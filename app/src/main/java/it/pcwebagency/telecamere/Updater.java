@@ -118,7 +118,7 @@ public final class Updater {
         if (Build.VERSION.SDK_INT >= 26 && !activity.getPackageManager().canRequestPackageInstalls()) {
             new AlertDialog.Builder(activity)
                     .setTitle("Permesso necessario")
-                    .setMessage("Per installare l'aggiornamento consenti a «Telecamere» di installare app "
+                    .setMessage("Per installare l'aggiornamento consenti a «Free Cam TV View» di installare app "
                             + "(Fire TV: Impostazioni → La mia Fire TV → Opzioni sviluppatore → Installa app sconosciute), "
                             + "poi riprova.")
                     .setPositiveButton("Apri impostazioni", (d, w) -> {
@@ -139,7 +139,7 @@ public final class Updater {
             try {
                 File dir = new File(activity.getCacheDir(), "updates");
                 if (!dir.isDirectory() && !dir.mkdirs()) throw new IOException("Cartella non disponibile");
-                File apk = new File(dir, "Telecamere-" + r.version + ".apk");
+                File apk = new File(dir, "FreeCamTVView-" + r.version + ".apk");
                 HttpURLConnection c = open(r.apkUrl);
                 if (c.getResponseCode() != 200) throw new IOException("Download HTTP " + c.getResponseCode());
                 try (InputStream in = c.getInputStream(); FileOutputStream out = new FileOutputStream(apk)) {
@@ -190,7 +190,7 @@ public final class Updater {
         HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
         c.setConnectTimeout(8000);
         c.setReadTimeout(30000);
-        c.setRequestProperty("User-Agent", "Telecamere/" + BuildConfig.VERSION_NAME);
+        c.setRequestProperty("User-Agent", "FreeCamTVView/" + BuildConfig.VERSION_NAME);
         c.setInstanceFollowRedirects(true);
         return c;
     }

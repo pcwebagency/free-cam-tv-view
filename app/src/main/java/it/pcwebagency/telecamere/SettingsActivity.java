@@ -360,7 +360,7 @@ public class SettingsActivity extends Activity {
                 + "github.com/" + BuildConfig.GITHUB_REPO + "\n\n"
                 + "Controllo automatico degli aggiornamenti: " + (auto ? "attivo" : "disattivato");
         new AlertDialog.Builder(this)
-                .setTitle("Telecamere")
+                .setTitle("Free Cam TV View")
                 .setMessage(msg)
                 .setPositiveButton("Controlla aggiornamenti", (d, w) -> Updater.check(this, true))
                 .setNeutralButton(auto ? "Disattiva controllo automatico" : "Attiva controllo automatico", (d, w) -> {

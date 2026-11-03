@@ -2,6 +2,11 @@
 
 Tutte le modifiche rilevanti del progetto sono documentate in questo file.
 
+## [1.0.1] — 2026-11-03
+
+### Modifiche
+- L'app si chiama ora **Free Cam TV View** (nome, banner e menu Informazioni)
+
 ## [1.0.0] — 2026-11-03
 
 Prima versione pubblica.

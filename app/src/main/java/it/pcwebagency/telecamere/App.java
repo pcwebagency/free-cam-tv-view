@@ -14,7 +14,7 @@ public class App extends Application {
         Thread.UncaughtExceptionHandler system = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((thread, e) -> {
             if (thread.getName().startsWith("ExoPlayer:")) {
-                Log.e("Telecamere", "Errore nel player ignorato", e);
+                Log.e("FreeCamTVView", "Errore nel player ignorato", e);
                 return;
             }
             if (system != null) system.uncaughtException(thread, e);

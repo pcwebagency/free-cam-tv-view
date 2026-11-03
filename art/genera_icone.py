@@ -1,4 +1,4 @@
-"""Genera icona e banner dell'app Telecamere (PC Web Agency).
+"""Genera icona e banner dell'app Free Cam TV View (PC Web Agency).
 
 Uso: python3 art/genera_icone.py   (dalla cartella del progetto, richiede Pillow)
 """
@@ -83,8 +83,9 @@ def banner(w=640, h=360):
     d = ImageDraw.Draw(bg)
     title = ImageFont.truetype("/System/Library/Fonts/Avenir Next.ttc", 54, index=2)   # Demi Bold
     sub = ImageFont.truetype("/System/Library/Fonts/Avenir Next.ttc", 26, index=5)     # Medium
-    d.text((318, 112), "Telecamere", font=title, fill="white")
-    d.text((324, 184), "Live · Dahua · RTSP", font=sub, fill=(178, 235, 242))
+    d.text((318, 78), "Free Cam", font=title, fill="white")
+    d.text((318, 142), "TV View", font=title, fill="white")
+    d.text((322, 228), "Live · Dahua · RTSP", font=sub, fill=(178, 235, 242))
     return bg
 
 

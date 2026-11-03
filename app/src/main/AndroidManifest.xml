@@ -10,7 +10,7 @@
 
     <application
         android:name=".App"
-        android:label="Telecamere"
+        android:label="Free Cam TV View"
         android:icon="@mipmap/ic_launcher"
         android:banner="@drawable/banner"
         android:usesCleartextTraffic="true"
