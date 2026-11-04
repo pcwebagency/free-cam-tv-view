@@ -7,14 +7,15 @@ if (keystoreFile.exists()) keystore.load(new FileInputStream(keystoreFile))
 
 android {
     namespace 'it.pcwebagency.telecamere'
-    compileSdk 34
+    compileSdk 36
     defaultConfig {
         applicationId 'it.pcwebagency.telecamere'
         minSdk 22
-        targetSdk 34
+        targetSdk 36
         versionCode 5
         versionName '1.0.4'
         buildConfigField 'String', 'GITHUB_REPO', "\"${project.findProperty('githubRepo') ?: ''}\""
+        buildConfigField "boolean", "UPDATER_ENABLED", "true"
     }
     buildFeatures { buildConfig true }
     signingConfigs {
@@ -42,6 +43,9 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 }
+
+// Personalizzazioni locali facoltative (escluse da git)
+if (file("local.gradle").exists()) apply from: "local.gradle"
 
 dependencies {
     def media3 = '1.4.1'

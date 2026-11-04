@@ -7,6 +7,10 @@ Tutte le modifiche rilevanti del progetto sono documentate in questo file.
 ### Correzioni
 - Telecamere con flusso HD oltre la risoluzione gestita dal decoder della TV (es. 4K su TV 1080p): si usa automaticamente il flusso extra Dahua (subtype 2) e, se non disponibile, LD, con un avviso, invece di restare su «Connessione…»
 - Banner dell'app dichiarato anche sull'activity di avvio (visibile nei launcher Android TV)
+- Lo schermo non va più in standby mentre si guarda la griglia delle telecamere
+
+### Compatibilità
+- Aggiornata ad Android 16 (target SDK 36)
 
 ## [1.0.3] — 2026-11-03
 

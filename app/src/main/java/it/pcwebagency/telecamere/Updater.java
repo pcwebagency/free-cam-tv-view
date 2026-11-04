@@ -55,6 +55,7 @@ public final class Updater {
 
     /** Controllo automatico all'avvio (al massimo ogni 12 ore): propone l'aggiornamento solo se esiste. */
     public static void autoCheck(Activity activity) {
+        if (!BuildConfig.UPDATER_ENABLED) return;
         if (!isAutoCheck(activity)) return;
         long now = System.currentTimeMillis();
         if (now - prefs(activity).getLong(KEY_LAST, 0) < AUTO_INTERVAL_MS) return;
@@ -64,6 +65,7 @@ public final class Updater {
 
     /** @param manual se true mostra anche "nessun aggiornamento" e gli errori */
     public static void check(Activity activity, boolean manual) {
+        if (!BuildConfig.UPDATER_ENABLED) return;
         if (manual) Toast.makeText(activity, "Controllo aggiornamenti…", Toast.LENGTH_SHORT).show();
         new Thread(() -> {
             try {

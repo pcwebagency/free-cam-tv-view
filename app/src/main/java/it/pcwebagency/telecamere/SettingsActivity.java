@@ -49,7 +49,7 @@ public class SettingsActivity extends Activity {
                     }
                     saveAndRefresh();
                 })));
-        actions.addView(button("Info e aggiornamenti", v -> about()));
+        actions.addView(button(BuildConfig.UPDATER_ENABLED ? "Info e aggiornamenti" : "Informazioni", v -> about()));
         root.addView(actions);
 
         list = new LinearLayout(this);
@@ -424,6 +424,7 @@ public class SettingsActivity extends Activity {
     // --- Informazioni, credits e aggiornamenti ---
 
     private void about() {
+        boolean updater = BuildConfig.UPDATER_ENABLED;
         boolean auto = Updater.isAutoCheck(this);
         String msg = "Versione " + BuildConfig.VERSION_NAME + "\n\n"
                 + "Sviluppata da PC Web Agency\n"
@@ -432,18 +433,23 @@ public class SettingsActivity extends Activity {
                 + "• AndroidX Media3 — The Android Open Source Project (Apache 2.0)\n"
                 + "• AndroidX Core e Annotation — The Android Open Source Project (Apache 2.0)\n\n"
                 + "Licenza Apache 2.0\n"
-                + "github.com/" + BuildConfig.GITHUB_REPO + "\n\n"
-                + "Controllo automatico degli aggiornamenti: " + (auto ? "attivo" : "disattivato");
-        new ModernDialog(this)
+                + "Codice sorgente: github.com/" + BuildConfig.GITHUB_REPO
+                + (updater ? "\n\nControllo automatico degli aggiornamenti: " + (auto ? "attivo" : "disattivato") : "");
+        ModernDialog dialog = new ModernDialog(this)
                 .setTitle("Free Cam TV View")
-                .setMessage(msg)
-                .setPositiveButton("Controlla aggiornamenti", (d, w) -> Updater.check(this, true))
-                .setNeutralButton(auto ? "Disattiva controllo automatico" : "Attiva controllo automatico", (d, w) -> {
-                    Updater.setAutoCheck(this, !auto);
-                    about();
-                })
-                .setNegativeButton("Chiudi", null)
-                .show();
+                .setMessage(msg);
+        if (updater) {
+            // pulsanti di aggiornamento solo se l.aggiornamento interno è abilitato
+            dialog.setPositiveButton("Controlla aggiornamenti", (d, w) -> Updater.check(this, true))
+                    .setNeutralButton(auto ? "Disattiva controllo automatico" : "Attiva controllo automatico", (d, w) -> {
+                        Updater.setAutoCheck(this, !auto);
+                        about();
+                    })
+                    .setNegativeButton("Chiudi", null);
+        } else {
+            dialog.setPositiveButton("Chiudi", null);
+        }
+        dialog.show();
     }
 
     // --- Helper UI ---
