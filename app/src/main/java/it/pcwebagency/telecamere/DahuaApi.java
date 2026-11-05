@@ -70,12 +70,12 @@ public final class DahuaApi {
         if (code == 401) {
             String challenge = c.getHeaderField("WWW-Authenticate");
             c.disconnect();
-            if (challenge == null || !challenge.startsWith("Digest")) throw new IOException("Autenticazione non supportata");
+            if (challenge == null || !challenge.startsWith("Digest")) throw new IOException(App.s(R.string.err_auth_unsupported));
             c = open(url);
             c.setRequestProperty("Authorization", digest(challenge, new URL(url).getFile(), user, pass));
             code = c.getResponseCode();
         }
-        if (code == 401) throw new IOException("Utente o password errati");
+        if (code == 401) throw new IOException(App.s(R.string.err_wrong_credentials));
         if (code != 200) throw new IOException("HTTP " + code);
         try (InputStream in = c.getInputStream()) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();

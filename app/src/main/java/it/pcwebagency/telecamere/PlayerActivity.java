@@ -64,7 +64,7 @@ public class PlayerActivity extends Activity {
         Camera cam = cams.get(index);
         live = new LiveView(this, cam, true);
         live.setLabelVisible(CameraStore.showNames(this));
-        hint = live.addHint("▲▼: " + (live.isHd() ? "passa a LD" : "passa a HD") + (cam.door ? "   ·   OK o ⏯: apri porta" : ""));
+        hint = live.addHint(getString(live.isHd() ? R.string.player_to_ld : R.string.player_to_hd) + (cam.door ? getString(R.string.player_door) : ""));
         setContentView(live.root);
         live.start();
         showHint();

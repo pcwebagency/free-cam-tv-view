@@ -2,6 +2,11 @@
 
 Tutte le modifiche rilevanti del progetto sono documentate in questo file.
 
+## [1.0.5] — 2026-11-05
+
+### Novità
+- App in inglese e italiano: la lingua segue quella della TV (italiano se la TV è in italiano, altrimenti inglese)
+
 ## [1.0.4] — 2026-11-03
 
 ### Correzioni

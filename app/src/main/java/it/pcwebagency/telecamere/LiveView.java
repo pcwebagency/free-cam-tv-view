@@ -31,7 +31,6 @@ public class LiveView {
     private static final int RETRY_MS = 5000;
     /** Con password errata si riprova di rado: gli NVR Dahua bloccano l'account dopo pochi tentativi. */
     private static final int AUTH_RETRY_MS = 120000;
-    private static final String AUTH_ERROR = "utente o password errati";
     private static final int WATCHDOG_MS = 15000;
 
     public final FrameLayout root;
@@ -59,7 +58,7 @@ public class LiveView {
             if (player == null) return;
             long pos = player.getCurrentPosition();
             if (player.getPlaybackState() != Player.STATE_READY || pos == lastPosition) {
-                retry("nessun segnale");
+                retry(App.s(R.string.live_no_signal));
                 return;
             }
             lastPosition = pos;
@@ -130,7 +129,7 @@ public class LiveView {
     public void start() {
         stop();
         if (hdStage == 0) {
-            status.setText("Connessione…");
+            status.setText(R.string.live_connecting);
             status.setVisibility(View.VISIBLE);
         }
         DefaultLoadControl lowLatency = new DefaultLoadControl.Builder()
@@ -147,10 +146,10 @@ public class LiveView {
             public void onPlaybackStateChanged(int state) {
                 if (state == Player.STATE_READY && hdStage == 0) status.setVisibility(View.GONE);
                 else if (state == Player.STATE_READY) {
-                    if (hdStage == 1) status.setText("HD tramite il flusso extra della telecamera");
+                    if (hdStage == 1) status.setText(R.string.live_hd_extra);
                     handler.postDelayed(() -> status.setVisibility(View.GONE), 4000);
                 }
-                else if (state == Player.STATE_ENDED) retry("Flusso terminato");
+                else if (state == Player.STATE_ENDED) retry(App.s(R.string.live_stream_ended));
             }
 
             @Override
@@ -195,13 +194,13 @@ public class LiveView {
     private void fallbackHd() {
         if (hdStage == 0) {
             hdStage = 1;
-            status.setText("Il flusso HD supera la risoluzione massima della TV: provo il flusso extra…");
+            status.setText(R.string.live_hd_too_big);
         } else {
             hdStage = 2;
             forceLd = true;
             quality.setText("LD");
             quality.setTextColor(Ui.WARN);
-            status.setText("HD non riproducibile su questa TV: mostrato LD\n(imposta il flusso extra o principale della telecamera a 1920×1080)");
+            status.setText(R.string.live_hd_unsupported);
         }
         status.setVisibility(View.VISIBLE);
         handler.removeCallbacksAndMessages(null);
@@ -212,20 +211,19 @@ public class LiveView {
         String msg = "";
         for (Throwable t = e; t != null; t = t.getCause()) if (t.getMessage() != null) msg = t.getMessage();
         for (Throwable t = e; t != null; t = t.getCause())
-            if (t instanceof java.net.UnknownHostException) return "nome host non trovato: controlla l'indirizzo";
-        if (msg.contains(" 401")) return AUTH_ERROR;
-        if (msg.contains(" 400") || msg.contains(" 404") || msg.contains("non valida"))
-            return "flusso RTSP non supportato: controlla il percorso o usa un URL personalizzato";
+            if (t instanceof java.net.UnknownHostException) return App.s(R.string.live_host_not_found);
+        if (msg.contains(" 401")) return App.s(R.string.live_auth_error);
+        if (msg.contains(" 400") || msg.contains(" 404") || msg.contains("Invalid RTSP response"))
+            return App.s(R.string.live_rtsp_unsupported);
         if (e.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED
                 || e.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT)
-            return "dispositivo non raggiungibile in rete";
+            return App.s(R.string.live_unreachable);
         return msg.isEmpty() ? e.getErrorCodeName() : msg;
     }
 
     private void retry(String reason) {
-        boolean auth = reason.equals(AUTH_ERROR);
-        status.setText(reason + (auth ? "\ncorreggi la password nelle impostazioni (nuovo tentativo tra 2 minuti)"
-                : "\nnuovo tentativo tra pochi secondi…"));
+        boolean auth = reason.equals(App.s(R.string.live_auth_error));
+        status.setText(reason + App.s(auth ? R.string.live_retry_auth : R.string.live_retry));
         status.setVisibility(View.VISIBLE);
         handler.removeCallbacksAndMessages(null);
         handler.postDelayed(this::start, auth ? AUTH_RETRY_MS : RETRY_MS);

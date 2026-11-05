@@ -69,7 +69,7 @@ public class MainActivity extends Activity {
         doorHint.setTextColor(Color.GRAY);
         doorHint.setTextSize(13);
         doorHint.setPadding(16, 4, 16, 6);
-        doorHint.setText("OK tenuto premuto: LD/HD e opzioni");
+        doorHint.setText(R.string.main_long_ok);
         doorHint.setVisibility(View.GONE);
         bottom.addView(doorHint, new LinearLayout.LayoutParams(-2, -2));
         layoutButtons = new LinearLayout(this);
@@ -111,7 +111,7 @@ public class MainActivity extends Activity {
         tabsWanted = groups.size() > 1;
         tabs.setVisibility(tabsWanted ? View.VISIBLE : View.GONE);
         if (groups.size() < 2) return;
-        tabs.addView(tab("Tutte (" + all.size() + ")", CameraStore.ALL, selected));
+        tabs.addView(tab(getString(R.string.main_tab_all, all.size()), CameraStore.ALL, selected));
         for (String g : groups) tabs.addView(tab(g + " (" + CameraStore.filter(all, g).size() + ")", g, selected));
     }
 
@@ -128,7 +128,7 @@ public class MainActivity extends Activity {
         namesToggle.setGravity(Gravity.CENTER);
         namesToggle.setIncludeFontPadding(false);
         namesToggle.setFocusable(true);
-        namesToggle.setContentDescription(names ? "Nascondi i nomi" : "Mostra i nomi");
+        namesToggle.setContentDescription(getString(names ? R.string.main_hide_names : R.string.main_show_names));
         namesToggle.setBackground(focusedBackground());
         namesToggle.setOnClickListener(v -> {
             CameraStore.setShowNames(this, !names);
@@ -138,7 +138,7 @@ public class MainActivity extends Activity {
         });
         layoutButtons.addView(namesToggle, iconParams());
         ImageView current = layoutIcon(pageSize, Color.WHITE);
-        current.setContentDescription("Riquadri: " + pageSize);
+        current.setContentDescription(getString(R.string.main_tiles_current, pageSize));
         current.setOnClickListener(this::showLayoutPicker);
         layoutButtons.addView(current, iconParams());
     }
@@ -155,7 +155,7 @@ public class MainActivity extends Activity {
         View selected = null;
         for (int n : LAYOUTS) {
             ImageView icon = layoutIcon(n, n == pageSize ? Color.WHITE : Color.GRAY);
-            icon.setContentDescription(n + " riquadri");
+            icon.setContentDescription(getString(R.string.main_tiles, n));
             icon.setOnClickListener(v -> {
                 popup.dismiss();
                 CameraStore.setLayout(this, n);
@@ -261,14 +261,14 @@ public class MainActivity extends Activity {
         doorHint.setVisibility(View.GONE);
         if (cams.isEmpty()) {
             TextView empty = new TextView(this);
-            empty.setText("Nessuna telecamera configurata\n\nPremi OK per cercarle in rete");
+            empty.setText(R.string.main_empty);
             empty.setTextColor(Color.WHITE);
             empty.setTextSize(24);
             empty.setGravity(Gravity.CENTER);
             empty.setFocusable(true);
             empty.setOnClickListener(v -> openSettings());
             grid.addView(empty, new LinearLayout.LayoutParams(-1, -1));
-            footer.setText("≡ Menu: impostazioni");
+            footer.setText(R.string.main_footer_menu);
             empty.requestFocus();
             return;
         }
@@ -297,8 +297,8 @@ public class MainActivity extends Activity {
                     if (has) {
                         showBorder(v);
                         doorHint.setText(v.getTag() instanceof Camera
-                                ? "OK tenuto premuto: LD/HD e opzioni   ·   ⏯: apri porta"
-                                : "OK tenuto premuto: LD/HD e opzioni");
+                                ? R.string.main_long_ok_door
+                                : R.string.main_long_ok);
                         doorHint.setVisibility(View.VISIBLE);
                     } else {
                         v.setBackgroundColor(Color.BLACK);
@@ -318,10 +318,10 @@ public class MainActivity extends Activity {
                 if (first == null) first = lv.root;
             }
         }
-        String hint = "OK: schermo intero  ·  ≡ Menu: impostazioni";
-        if (tabs.getVisibility() == View.VISIBLE) hint += "  ·  ▲ gruppi";
-        hint += "  ·  ▼ riquadri";
-        if (pageCount() > 1) hint += "  ·  Pagina " + (page + 1) + "/" + pageCount() + " (◀ ▶)";
+        String hint = getString(R.string.main_hint);
+        if (tabs.getVisibility() == View.VISIBLE) hint += getString(R.string.main_hint_groups);
+        hint += getString(R.string.main_hint_tiles);
+        if (pageCount() > 1) hint += getString(R.string.main_hint_page, page + 1, pageCount());
         footer.setText(hint);
         first.requestFocus();
         // dopo il layout, così il focus di default non finisce sulle icone della barra in basso
@@ -335,16 +335,16 @@ public class MainActivity extends Activity {
     private void quickMenu(Camera cam, int idx) {
         ModernDialog m = new ModernDialog(this)
                 .setTitle(cam.label())
-                .setMessage("Qualità in griglia: " + (cam.highQuality ? "HD (flusso principale)" : "LD (flusso secondario)"))
-                .setPositiveButton(cam.highQuality ? "Passa a LD" : "Passa a HD", (d, w) -> {
+                .setMessage(getString(R.string.main_grid_quality, getString(cam.highQuality ? R.string.main_hd_main : R.string.main_ld_sub)))
+                .setPositiveButton(getString(cam.highQuality ? R.string.switch_to_ld : R.string.switch_to_hd), (d, w) -> {
                     cam.highQuality = !cam.highQuality;
                     CameraStore.updateQuality(this, cam);
                     show();
                 })
-                .setNeutralButton("Schermo intero", (d, w) -> startActivity(
+                .setNeutralButton(getString(R.string.full_screen), (d, w) -> startActivity(
                         new Intent(this, PlayerActivity.class).putExtra(PlayerActivity.EXTRA_INDEX, idx)));
-        if (cam.door) m.setNegativeButton("Apri porta", (d, w) -> DoorOpener.ask(this, cam));
-        else m.setNegativeButton("Chiudi", null);
+        if (cam.door) m.setNegativeButton(getString(R.string.open_door), (d, w) -> DoorOpener.ask(this, cam));
+        else m.setNegativeButton(getString(R.string.close), null);
         m.show();
     }
 

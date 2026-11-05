@@ -8,9 +8,17 @@ import android.util.Log;
  * chiudere l'app. Il watchdog di {@link LiveView} riavvia poi il flusso.
  */
 public class App extends Application {
+    private static App instance;
+
+    /** Testo localizzato per le classi senza Context (strings.xml: inglese, values-it: italiano). */
+    static String s(int id, Object... args) {
+        return instance.getString(id, args);
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
+        instance = this;
         Thread.UncaughtExceptionHandler system = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((thread, e) -> {
             if (thread.getName().startsWith("ExoPlayer:")) {

@@ -48,13 +48,13 @@ public final class Discovery {
         }
 
         public String describe() {
-            if (deviceClass.isEmpty()) return ip + " — RTSP generico";
+            if (deviceClass.isEmpty()) return App.s(R.string.disc_generic_rtsp, ip);
             String kind;
             switch (deviceClass.toUpperCase()) {
-                case "IPC": kind = "Telecamera"; break;
-                case "VTO": kind = "Videocitofono esterno"; break;
-                case "VTH": kind = "Monitor interno (senza video)"; break;
-                default: kind = isRecorder() ? "Registratore " + deviceClass : deviceClass;
+                case "IPC": kind = App.s(R.string.disc_ipc); break;
+                case "VTO": kind = App.s(R.string.disc_vto); break;
+                case "VTH": kind = App.s(R.string.disc_vth); break;
+                default: kind = isRecorder() ? App.s(R.string.disc_recorder, deviceClass) : deviceClass;
             }
             return ip + " — " + kind + " " + model;
         }

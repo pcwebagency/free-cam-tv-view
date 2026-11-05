@@ -554,7 +554,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
         cSeq = pendingRequests.keyAt(0);
       } else {
         dispatchRtspError(
-            new RtspPlaybackException("Risposta RTSP non valida: " + response.status));
+            new RtspPlaybackException("Invalid RTSP response: " + response.status));
         return;
       }
 

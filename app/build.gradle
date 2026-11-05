@@ -12,10 +12,12 @@ android {
         applicationId 'it.pcwebagency.telecamere'
         minSdk 22
         targetSdk 36
-        versionCode 5
-        versionName '1.0.4'
+        versionCode 6
+        versionName '1.0.5'
         buildConfigField 'String', 'GITHUB_REPO', "\"${project.findProperty('githubRepo') ?: ''}\""
         buildConfigField "boolean", "UPDATER_ENABLED", "true"
+        // lingue dell'app: inglese (predefinita) e italiano
+        resourceConfigurations += ['en', 'it']
     }
     buildFeatures { buildConfig true }
     signingConfigs {

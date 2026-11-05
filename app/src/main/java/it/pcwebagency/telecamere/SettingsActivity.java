@@ -33,23 +33,23 @@ public class SettingsActivity extends Activity {
         root.setClipChildren(false);
         root.setClipToPadding(false);
 
-        root.addView(Ui.text(this, "Impostazioni", 26, Ui.TEXT, true));
-        root.addView(Ui.text(this, "Free Cam TV View · versione " + BuildConfig.VERSION_NAME, 13, Ui.TEXT_DIM, false),
+        root.addView(Ui.text(this, getString(R.string.set_title), 26, Ui.TEXT, true));
+        root.addView(Ui.text(this, getString(R.string.set_version, BuildConfig.VERSION_NAME), 13, Ui.TEXT_DIM, false),
                 Ui.margins(this, -2, -2, 0, 2, 0, 18));
 
         LinearLayout actions = new LinearLayout(this);
         actions.setClipChildren(false);
-        actions.addView(button("Cerca in rete", v -> search()));
-        actions.addView(button("Aggiungi", v -> edit(null)));
-        actions.addView(button("Credenziali per tutte", v -> askCredentials(
-                "Credenziali per tutte le telecamere", (u, p) -> {
+        actions.addView(button(getString(R.string.set_search), v -> search()));
+        actions.addView(button(getString(R.string.set_add), v -> edit(null)));
+        actions.addView(button(getString(R.string.set_creds_all), v -> askCredentials(
+                getString(R.string.set_creds_all_title), (u, p) -> {
                     for (Camera c : cams) {
                         c.user = u;
                         c.password = p;
                     }
                     saveAndRefresh();
                 })));
-        actions.addView(button(BuildConfig.UPDATER_ENABLED ? "Info e aggiornamenti" : "Informazioni", v -> about()));
+        actions.addView(button(getString(BuildConfig.UPDATER_ENABLED ? R.string.set_info_updates : R.string.set_info), v -> about()));
         root.addView(actions);
 
         list = new LinearLayout(this);
@@ -69,7 +69,7 @@ public class SettingsActivity extends Activity {
     private void refresh() {
         list.removeAllViews();
         if (cams.isEmpty()) {
-            list.addView(Ui.text(this, "Nessuna telecamera configurata.\nUsa «Cerca in rete» oppure «Aggiungi».",
+            list.addView(Ui.text(this, getString(R.string.set_empty),
                     16, Ui.TEXT_DIM, false), Ui.margins(this, -2, -2, 0, 28, 0, 0));
             return;
         }
@@ -96,14 +96,14 @@ public class SettingsActivity extends Activity {
         LinearLayout texts = new LinearLayout(this);
         texts.setOrientation(LinearLayout.VERTICAL);
         texts.addView(Ui.text(this, c.label(), 16, Ui.TEXT, true));
-        String detail = c.customUrl.isEmpty() ? c.ip + "  ·  canale " + c.channel + "  ·  porta " + c.port : c.customUrl;
+        String detail = c.customUrl.isEmpty() ? getString(R.string.set_detail, c.ip, c.channel, c.port) : c.customUrl;
         texts.addView(Ui.text(this, detail, 13, Ui.TEXT_DIM, false));
         card.addView(texts, new LinearLayout.LayoutParams(0, -2, 1));
 
-        if (c.password.isEmpty()) card.addView(Ui.badge(this, "Senza password", Ui.WARN), Ui.margins(this, -2, -2, 8, 0, 0, 0));
-        if (c.highQuality) card.addView(Ui.badge(this, "HD in griglia", 0xFF81C784), Ui.margins(this, -2, -2, 8, 0, 0, 0));
-        if (!c.fullHd) card.addView(Ui.badge(this, "LD a schermo intero", Ui.TEXT_DIM), Ui.margins(this, -2, -2, 8, 0, 0, 0));
-        if (c.door) card.addView(Ui.badge(this, "Apriporta", 0xFF64B5F6), Ui.margins(this, -2, -2, 8, 0, 0, 0));
+        if (c.password.isEmpty()) card.addView(Ui.badge(this, getString(R.string.badge_no_password), Ui.WARN), Ui.margins(this, -2, -2, 8, 0, 0, 0));
+        if (c.highQuality) card.addView(Ui.badge(this, getString(R.string.badge_grid_hd), 0xFF81C784), Ui.margins(this, -2, -2, 8, 0, 0, 0));
+        if (!c.fullHd) card.addView(Ui.badge(this, getString(R.string.badge_full_ld), Ui.TEXT_DIM), Ui.margins(this, -2, -2, 8, 0, 0, 0));
+        if (c.door) card.addView(Ui.badge(this, getString(R.string.badge_door), 0xFF64B5F6), Ui.margins(this, -2, -2, 8, 0, 0, 0));
         card.addView(Ui.text(this, "›", 24, Ui.TEXT_DIM, false), Ui.margins(this, -2, -2, 16, 0, 0, 0));
 
         list.addView(card, Ui.margins(this, -1, -2, 0, 0, 0, 8));
@@ -118,7 +118,7 @@ public class SettingsActivity extends Activity {
 
     private void search() {
         android.app.Dialog wait = new ModernDialog(this)
-                .setMessage("Ricerca di telecamere e NVR in corso…").setCancelable(false).show();
+                .setMessage(getString(R.string.set_searching)).setCancelable(false).show();
         new Thread(() -> {
             List<Discovery.Device> found = Discovery.scan(this);
             runOnUiThread(() -> {
@@ -130,8 +130,8 @@ public class SettingsActivity extends Activity {
 
     private void showResults(List<Discovery.Device> found) {
         if (found.isEmpty()) {
-            new ModernDialog(this).setMessage("Nessun dispositivo trovato in rete.")
-                    .setPositiveButton("OK", null).show();
+            new ModernDialog(this).setMessage(getString(R.string.set_none_found))
+                    .setPositiveButton(getString(R.string.ok), null).show();
             return;
         }
         String[] items = new String[found.size()];
@@ -139,18 +139,18 @@ public class SettingsActivity extends Activity {
         for (int i = 0; i < found.size(); i++) {
             Discovery.Device d = found.get(i);
             boolean already = isConfigured(d.ip);
-            items[i] = d.describe() + (already ? "  (già aggiunto)" : "");
+            items[i] = d.describe() + (already ? getString(R.string.set_already) : "");
             checked[i] = d.hasVideo() && !already;
         }
         new ModernDialog(this)
-                .setTitle("Dispositivi trovati: scegli quali aggiungere")
+                .setTitle(getString(R.string.set_found_title))
                 .setMultiChoiceItems(items, checked, (dlg, which, on) -> checked[which] = on)
-                .setPositiveButton("Aggiungi", (dlg, w) -> {
+                .setPositiveButton(getString(R.string.set_add), (dlg, w) -> {
                     List<Discovery.Device> chosen = new ArrayList<>();
                     for (int i = 0; i < found.size(); i++) if (checked[i]) chosen.add(found.get(i));
                     if (!chosen.isEmpty()) addDiscovered(chosen);
                 })
-                .setNegativeButton("Annulla", null)
+                .setNegativeButton(getString(R.string.cancel), null)
                 .show();
     }
 
@@ -162,8 +162,7 @@ public class SettingsActivity extends Activity {
     private void addDiscovered(List<Discovery.Device> chosen) {
         boolean hasRecorder = false;
         for (Discovery.Device d : chosen) hasRecorder |= d.isRecorder();
-        String msg = hasRecorder ? "Credenziali dei dispositivi selezionati\n(per gli NVR servono per leggere i canali)"
-                : "Credenziali dei dispositivi selezionati";
+        String msg = getString(hasRecorder ? R.string.set_creds_selected_nvr : R.string.set_creds_selected);
         askGroupAndCredentials(msg, (u, p, group) -> new Thread(() -> {
             List<Camera> added = new ArrayList<>();
             StringBuilder errors = new StringBuilder();
@@ -171,7 +170,7 @@ public class SettingsActivity extends Activity {
                 if (d.isRecorder()) {
                     try {
                         for (DahuaApi.Channel ch : DahuaApi.channels(d.ip, 80, u, p)) {
-                            String name = ch.name.isEmpty() ? "Canale " + ch.number : ch.name;
+                            String name = ch.name.isEmpty() ? getString(R.string.channel_n, ch.number) : ch.name;
                             added.add(newCamera(name, d.ip, u, p, ch.number));
                         }
                         continue;
@@ -187,11 +186,11 @@ public class SettingsActivity extends Activity {
             runOnUiThread(() -> {
                 cams.addAll(added);
                 saveAndRefresh();
-                String done = "Aggiunti " + added.size() + " flussi video.";
+                String done = getString(R.string.set_added_streams, added.size());
                 if (errors.length() > 0) {
                     new ModernDialog(this).setTitle(done)
-                            .setMessage("Canali NVR non letti, aggiunto solo il canale 1:\n" + errors)
-                            .setPositiveButton("OK", null).show();
+                            .setMessage(getString(R.string.set_nvr_not_read, errors))
+                            .setPositiveButton(getString(R.string.ok), null).show();
                 } else {
                     Toast.makeText(this, done, Toast.LENGTH_LONG).show();
                 }
@@ -201,9 +200,9 @@ public class SettingsActivity extends Activity {
 
     private static String defaultName(Discovery.Device d) {
         String n = d.ip.substring(d.ip.lastIndexOf('.') + 1);
-        if (d.deviceClass.equalsIgnoreCase("VTO")) return "Videocitofono " + n;
-        if (d.isRecorder()) return "NVR " + n;
-        return "Telecamera " + n;
+        if (d.deviceClass.equalsIgnoreCase("VTO")) return App.s(R.string.name_vto, n);
+        if (d.isRecorder()) return App.s(R.string.name_nvr, n);
+        return App.s(R.string.name_cam, n);
     }
 
     private static Camera newCamera(String name, String ip, String user, String pass, int channel) {
@@ -228,12 +227,12 @@ public class SettingsActivity extends Activity {
 
     private void askCredentials(String message, CredentialsCallback cb) {
         LinearLayout form = form();
-        EditText user = field(form, "Utente", "admin", false);
-        EditText pass = field(form, "Password", "", true);
+        EditText user = field(form, getString(R.string.field_user), "admin", false);
+        EditText pass = field(form, getString(R.string.field_password), "", true);
         new ModernDialog(this).setTitle(message).setView(form)
-                .setPositiveButton("OK", (d, w) -> cb.onCredentials(user.getText().toString().trim(), pass.getText().toString()))
-                .setNeutralButton("Più tardi", (d, w) -> cb.onCredentials("admin", ""))
-                .setNegativeButton("Annulla", null)
+                .setPositiveButton(getString(R.string.ok), (d, w) -> cb.onCredentials(user.getText().toString().trim(), pass.getText().toString()))
+                .setNeutralButton(getString(R.string.later), (d, w) -> cb.onCredentials("admin", ""))
+                .setNegativeButton(getString(R.string.cancel), null)
                 .show();
     }
 
@@ -241,13 +240,13 @@ public class SettingsActivity extends Activity {
     private void askGroupAndCredentials(String message, DiscoveredCallback cb) {
         LinearLayout form = form();
         EditText group = groupField(form, defaultGroup());
-        EditText user = field(form, "Utente", "admin", false);
-        EditText pass = field(form, "Password", "", true);
+        EditText user = field(form, getString(R.string.field_user), "admin", false);
+        EditText pass = field(form, getString(R.string.field_password), "", true);
         new ModernDialog(this).setTitle(message).setView(form)
-                .setPositiveButton("OK", (d, w) -> cb.onConfirm(
+                .setPositiveButton(getString(R.string.ok), (d, w) -> cb.onConfirm(
                         user.getText().toString().trim(), pass.getText().toString(), groupName(group)))
-                .setNeutralButton("Password più tardi", (d, w) -> cb.onConfirm("admin", "", groupName(group)))
-                .setNegativeButton("Annulla", null)
+                .setNeutralButton(getString(R.string.password_later), (d, w) -> cb.onConfirm("admin", "", groupName(group)))
+                .setNegativeButton(getString(R.string.cancel), null)
                 .show();
     }
 
@@ -260,7 +259,7 @@ public class SettingsActivity extends Activity {
 
     private EditText groupField(LinearLayout form, String value) {
         List<String> groups = CameraStore.groups(cams);
-        String label = "Gruppo (es. Studio, Casa)" + (groups.isEmpty() ? "" : " — esistenti: " + TextUtils.join(", ", groups));
+        String label = getString(R.string.field_group) + (groups.isEmpty() ? "" : getString(R.string.field_group_existing, TextUtils.join(", ", groups)));
         return field(form, label, value, false);
     }
 
@@ -275,38 +274,38 @@ public class SettingsActivity extends Activity {
         Camera c = isNew ? new Camera() : cam;
         if (isNew) c.group = defaultGroup();
         LinearLayout form = form();
-        EditText name = field(form, "Nome", c.name, false);
+        EditText name = field(form, getString(R.string.field_name), c.name, false);
         EditText group = groupField(form, c.group);
-        EditText ip = field(form, "Indirizzo IP o nome host (DDNS per sedi remote)", c.ip, false);
-        EditText port = field(form, "Porta RTSP", String.valueOf(c.port), false);
-        EditText user = field(form, "Utente", c.user, false);
-        EditText pass = field(form, "Password", c.password, true);
-        EditText channel = field(form, "Canale (1 per le telecamere; per gli NVR anche più canali: 1-8 oppure 1,3,5)",
+        EditText ip = field(form, getString(R.string.field_host), c.ip, false);
+        EditText port = field(form, getString(R.string.field_rtsp_port), String.valueOf(c.port), false);
+        EditText user = field(form, getString(R.string.field_user), c.user, false);
+        EditText pass = field(form, getString(R.string.field_password), c.password, true);
+        EditText channel = field(form, getString(R.string.field_channel),
                 String.valueOf(c.channel), false);
-        EditText custom = field(form, "URL RTSP personalizzato (solo per altre marche, facoltativo)", c.customUrl, false);
-        EditText httpPort = field(form, "Porta HTTP (apriporta e canali NVR)", String.valueOf(c.httpPort), false);
+        EditText custom = field(form, getString(R.string.field_custom_url), c.customUrl, false);
+        EditText httpPort = field(form, getString(R.string.field_http_port), String.valueOf(c.httpPort), false);
         httpPort.setInputType(InputType.TYPE_CLASS_NUMBER);
         CheckBox door = new CheckBox(this);
-        door.setText("Videocitofono: mostra l'apriporta a schermo intero");
+        door.setText(R.string.chk_door);
         door.setChecked(c.door);
         form.addView(door);
         port.setInputType(InputType.TYPE_CLASS_NUMBER);
 
         CheckBox gridHd = new CheckBox(this);
-        gridHd.setText("HD in griglia (più carico per TV e rete; altrimenti LD)");
+        gridHd.setText(R.string.chk_grid_hd);
         gridHd.setChecked(c.highQuality);
         form.addView(gridHd);
         CheckBox fullHd = new CheckBox(this);
-        fullHd.setText("HD a schermo intero (altrimenti LD)");
+        fullHd.setText(R.string.chk_full_hd);
         fullHd.setChecked(c.fullHd);
         form.addView(fullHd);
 
         ScrollView scroll = new ScrollView(this);
         scroll.addView(form);
         ModernDialog b = new ModernDialog(this)
-                .setTitle(isNew ? "Aggiungi telecamera o NVR" : "Modifica " + c.label())
+                .setTitle(isNew ? getString(R.string.edit_add_title) : getString(R.string.edit_title, c.label()))
                 .setView(scroll)
-                .setPositiveButton("Salva", (d, w) -> {
+                .setPositiveButton(getString(R.string.save), (d, w) -> {
                     c.name = name.getText().toString().trim();
                     c.group = groupName(group);
                     c.highQuality = gridHd.isChecked();
@@ -319,13 +318,13 @@ public class SettingsActivity extends Activity {
                     c.password = pass.getText().toString();
                     List<Integer> chans = parseChannels(channel.getText().toString());
                     if (chans.isEmpty()) {
-                        Toast.makeText(this, "Canale non valido: usa ad esempio 1, 1-8 oppure 1,3,5", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, R.string.err_channel, Toast.LENGTH_LONG).show();
                         return;
                     }
                     c.channel = chans.get(0);
                     c.customUrl = custom.getText().toString().trim();
                     if (c.ip.isEmpty() && c.customUrl.isEmpty()) {
-                        Toast.makeText(this, "Serve almeno l'indirizzo IP", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, R.string.err_ip, Toast.LENGTH_LONG).show();
                         return;
                     }
                     if (isNew) cams.add(c);
@@ -333,7 +332,7 @@ public class SettingsActivity extends Activity {
                     saveAndRefresh();
                 });
         if (isNew) {
-            b.setNeutralButton("Importa tutti i canali NVR", (d, w) -> {
+            b.setNeutralButton(getString(R.string.import_nvr), (d, w) -> {
                 Camera t = new Camera();
                 t.ip = ip.getText().toString().trim();
                 t.port = parseInt(port, 554);
@@ -345,13 +344,13 @@ public class SettingsActivity extends Activity {
                 t.fullHd = fullHd.isChecked();
                 importNvr(t);
             });
-            b.setNegativeButton("Annulla", null);
+            b.setNegativeButton(getString(R.string.cancel), null);
         } else {
-            b.setNeutralButton("Elimina", (d, w) -> {
+            b.setNeutralButton(getString(R.string.delete), (d, w) -> {
                 cams.remove(c);
                 saveAndRefresh();
             });
-            b.setNegativeButton("Annulla", null);
+            b.setNegativeButton(getString(R.string.cancel), null);
         }
         b.show();
     }
@@ -361,7 +360,7 @@ public class SettingsActivity extends Activity {
      * con lo stesso host, porte e credenziali. I nomi diventano "Nome 1", "Nome 2"…
      */
     private void addChannels(Camera c, List<Integer> chans) {
-        String base = c.name.isEmpty() ? "Canale" : c.name;
+        String base = c.name.isEmpty() ? getString(R.string.channel_word) : c.name;
         c.name = base + " " + chans.get(0);
         int pos = cams.indexOf(c);
         for (int i = 1; i < chans.size(); i++) {
@@ -371,7 +370,7 @@ public class SettingsActivity extends Activity {
             x.door = false;
             cams.add(pos + i, x);
         }
-        Toast.makeText(this, "Aggiunti " + chans.size() + " canali", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, getString(R.string.added_channels, chans.size()), Toast.LENGTH_LONG).show();
     }
 
     /** "1-8", "1,3,5", "2" → elenco di canali (1…128, al massimo 64). */
@@ -395,7 +394,7 @@ public class SettingsActivity extends Activity {
     /** Legge i canali dall'NVR (CGI sulla porta HTTP) e crea una voce per ciascuno, copiando {@code t}. */
     private void importNvr(Camera t) {
         if (t.ip.isEmpty()) {
-            Toast.makeText(this, "Inserisci l'indirizzo IP dell'NVR", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.err_nvr_ip, Toast.LENGTH_LONG).show();
             return;
         }
         new Thread(() -> {
@@ -404,19 +403,17 @@ public class SettingsActivity extends Activity {
                 runOnUiThread(() -> {
                     for (DahuaApi.Channel ch : chans) {
                         Camera c = t.copy();
-                        c.name = ch.name.isEmpty() ? "Canale " + ch.number : ch.name;
+                        c.name = ch.name.isEmpty() ? getString(R.string.channel_n, ch.number) : ch.name;
                         c.channel = ch.number;
                         cams.add(c);
                     }
                     saveAndRefresh();
-                    Toast.makeText(this, "Importati " + chans.size() + " canali", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, getString(R.string.imported_channels, chans.size()), Toast.LENGTH_LONG).show();
                 });
             } catch (Exception e) {
-                runOnUiThread(() -> new ModernDialog(this).setTitle("Impossibile leggere i canali")
-                        .setMessage(t.ip + ":" + t.httpPort + " — " + e.getMessage()
-                                + "\n\nDa remoto, se la porta HTTP dell'NVR non è raggiungibile, inserisci i canali "
-                                + "a mano nel campo Canale (es. 1-8).")
-                        .setPositiveButton("OK", null).show());
+                runOnUiThread(() -> new ModernDialog(this).setTitle(getString(R.string.channels_failed_title))
+                        .setMessage(getString(R.string.channels_failed_msg, t.ip, t.httpPort, e.getMessage()))
+                        .setPositiveButton(getString(R.string.ok), null).show());
             }
         }).start();
     }
@@ -426,28 +423,21 @@ public class SettingsActivity extends Activity {
     private void about() {
         boolean updater = BuildConfig.UPDATER_ENABLED;
         boolean auto = Updater.isAutoCheck(this);
-        String msg = "Versione " + BuildConfig.VERSION_NAME + "\n\n"
-                + "Sviluppata da PC Web Agency\n"
-                + "www.pcwebagency.it · info@pcwebagency.it\n\n"
-                + "Credits\n"
-                + "• AndroidX Media3 — The Android Open Source Project (Apache 2.0)\n"
-                + "• AndroidX Core e Annotation — The Android Open Source Project (Apache 2.0)\n\n"
-                + "Licenza Apache 2.0\n"
-                + "Codice sorgente: github.com/" + BuildConfig.GITHUB_REPO
-                + (updater ? "\n\nControllo automatico degli aggiornamenti: " + (auto ? "attivo" : "disattivato") : "");
+        String msg = getString(R.string.about_text, BuildConfig.VERSION_NAME, BuildConfig.GITHUB_REPO)
+                + (updater ? getString(R.string.about_auto, getString(auto ? R.string.on : R.string.off)) : "");
         ModernDialog dialog = new ModernDialog(this)
                 .setTitle("Free Cam TV View")
                 .setMessage(msg);
         if (updater) {
             // pulsanti di aggiornamento solo se l.aggiornamento interno è abilitato
-            dialog.setPositiveButton("Controlla aggiornamenti", (d, w) -> Updater.check(this, true))
-                    .setNeutralButton(auto ? "Disattiva controllo automatico" : "Attiva controllo automatico", (d, w) -> {
+            dialog.setPositiveButton(getString(R.string.check_updates), (d, w) -> Updater.check(this, true))
+                    .setNeutralButton(getString(auto ? R.string.disable_auto : R.string.enable_auto), (d, w) -> {
                         Updater.setAutoCheck(this, !auto);
                         about();
                     })
-                    .setNegativeButton("Chiudi", null);
+                    .setNegativeButton(getString(R.string.close), null);
         } else {
-            dialog.setPositiveButton("Chiudi", null);
+            dialog.setPositiveButton(getString(R.string.close), null);
         }
         dialog.show();
     }

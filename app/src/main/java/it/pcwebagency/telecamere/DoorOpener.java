@@ -10,10 +10,10 @@ public final class DoorOpener {
 
     public static void ask(Activity activity, Camera cam) {
         new ModernDialog(activity)
-                .setTitle("Apri porta — " + cam.label())
-                .setPositiveButton("Porta 1", (d, w) -> open(activity, cam, 1))
-                .setNeutralButton("Porta 2", (d, w) -> open(activity, cam, 2))
-                .setNegativeButton("Annulla", null)
+                .setTitle(activity.getString(R.string.door_title, cam.label()))
+                .setPositiveButton(activity.getString(R.string.door_1), (d, w) -> open(activity, cam, 1))
+                .setNeutralButton(activity.getString(R.string.door_2), (d, w) -> open(activity, cam, 2))
+                .setNegativeButton(activity.getString(R.string.cancel), null)
                 .show();
     }
 
@@ -22,9 +22,9 @@ public final class DoorOpener {
             String msg;
             try {
                 DahuaApi.openDoor(cam, door);
-                msg = "Porta " + door + " aperta";
+                msg = activity.getString(R.string.door_opened, door);
             } catch (Exception ex) {
-                msg = "Apertura non riuscita: " + ex.getMessage();
+                msg = activity.getString(R.string.door_failed, ex.getMessage());
             }
             String text = msg;
             activity.runOnUiThread(() -> Toast.makeText(activity, text, Toast.LENGTH_LONG).show());

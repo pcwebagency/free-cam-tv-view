@@ -66,7 +66,7 @@ public final class Updater {
     /** @param manual se true mostra anche "nessun aggiornamento" e gli errori */
     public static void check(Activity activity, boolean manual) {
         if (!BuildConfig.UPDATER_ENABLED) return;
-        if (manual) Toast.makeText(activity, "Controllo aggiornamenti…", Toast.LENGTH_SHORT).show();
+        if (manual) Toast.makeText(activity, R.string.upd_checking, Toast.LENGTH_SHORT).show();
         new Thread(() -> {
             try {
                 Release r = latest();
@@ -74,22 +74,22 @@ public final class Updater {
                 activity.runOnUiThread(() -> {
                     if (activity.isFinishing()) return;
                     if (newer && !r.apkUrl.isEmpty()) offer(activity, r);
-                    else if (manual) info(activity, "Nessun aggiornamento",
-                            "Stai usando l'ultima versione (" + BuildConfig.VERSION_NAME + ").");
+                    else if (manual) info(activity, activity.getString(R.string.upd_none_title),
+                            activity.getString(R.string.upd_none_msg, BuildConfig.VERSION_NAME));
                 });
             } catch (Exception e) {
                 if (manual) activity.runOnUiThread(() ->
-                        info(activity, "Controllo non riuscito", e.getMessage()));
+                        info(activity, activity.getString(R.string.upd_check_failed), e.getMessage()));
             }
         }).start();
     }
 
     static Release latest() throws Exception {
-        if (BuildConfig.GITHUB_REPO.isEmpty()) throw new IOException("Repository GitHub non configurato");
+        if (BuildConfig.GITHUB_REPO.isEmpty()) throw new IOException(App.s(R.string.err_repo));
         HttpURLConnection c = open("https://api.github.com/repos/" + BuildConfig.GITHUB_REPO + "/releases/latest");
         c.setRequestProperty("Accept", "application/vnd.github+json");
         int code = c.getResponseCode();
-        if (code == 404) throw new IOException("Nessuna release pubblicata su GitHub");
+        if (code == 404) throw new IOException(App.s(R.string.err_no_release));
         if (code != 200) throw new IOException("GitHub HTTP " + code);
         JSONObject json = new JSONObject(read(c.getInputStream()));
         Release r = new Release();
@@ -109,38 +109,36 @@ public final class Updater {
     private static void offer(Activity activity, Release r) {
         String notes = r.notes.trim().isEmpty() ? "" : "\n\n" + r.notes.trim();
         new ModernDialog(activity)
-                .setTitle("Nuova versione " + r.version + " disponibile")
-                .setMessage("Versione installata: " + BuildConfig.VERSION_NAME + notes)
-                .setPositiveButton("Aggiorna ora", (d, w) -> download(activity, r))
-                .setNegativeButton("Più tardi", null)
+                .setTitle(activity.getString(R.string.upd_new_title, r.version))
+                .setMessage(activity.getString(R.string.upd_installed, BuildConfig.VERSION_NAME, notes))
+                .setPositiveButton(activity.getString(R.string.upd_now), (d, w) -> download(activity, r))
+                .setNegativeButton(activity.getString(R.string.later), null)
                 .show();
     }
 
     private static void download(Activity activity, Release r) {
         if (Build.VERSION.SDK_INT >= 26 && !activity.getPackageManager().canRequestPackageInstalls()) {
             new ModernDialog(activity)
-                    .setTitle("Permesso necessario")
-                    .setMessage("Per installare l'aggiornamento consenti a «Free Cam TV View» di installare app "
-                            + "(Fire TV: Impostazioni → La mia Fire TV → Opzioni sviluppatore → Installa app sconosciute), "
-                            + "poi riprova.")
-                    .setPositiveButton("Apri impostazioni", (d, w) -> {
+                    .setTitle(activity.getString(R.string.upd_perm_title))
+                    .setMessage(activity.getString(R.string.upd_perm_msg))
+                    .setPositiveButton(activity.getString(R.string.upd_open_settings), (d, w) -> {
                         try {
                             activity.startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
                                     Uri.parse("package:" + activity.getPackageName())));
                         } catch (Exception e) {
-                            Toast.makeText(activity, "Apri il menu dalle impostazioni della TV", Toast.LENGTH_LONG).show();
+                            Toast.makeText(activity, R.string.upd_open_tv_settings, Toast.LENGTH_LONG).show();
                         }
                     })
-                    .setNegativeButton("Annulla", null)
+                    .setNegativeButton(activity.getString(R.string.cancel), null)
                     .show();
             return;
         }
         android.app.Dialog wait = new ModernDialog(activity)
-                .setMessage("Download della versione " + r.version + "…").setCancelable(false).show();
+                .setMessage(activity.getString(R.string.upd_downloading, r.version)).setCancelable(false).show();
         new Thread(() -> {
             try {
                 File dir = new File(activity.getCacheDir(), "updates");
-                if (!dir.isDirectory() && !dir.mkdirs()) throw new IOException("Cartella non disponibile");
+                if (!dir.isDirectory() && !dir.mkdirs()) throw new IOException(App.s(R.string.err_folder));
                 File apk = new File(dir, "FreeCamTVView-" + r.version + ".apk");
                 HttpURLConnection c = open(r.apkUrl);
                 if (c.getResponseCode() != 200) throw new IOException("Download HTTP " + c.getResponseCode());
@@ -155,7 +153,7 @@ public final class Updater {
             } catch (Exception e) {
                 activity.runOnUiThread(() -> {
                     wait.dismiss();
-                    info(activity, "Download non riuscito", e.getMessage());
+                    info(activity, activity.getString(R.string.upd_download_failed), e.getMessage());
                 });
             }
         }).start();
@@ -170,7 +168,7 @@ public final class Updater {
     }
 
     private static void info(Activity activity, String title, String msg) {
-        new ModernDialog(activity).setTitle(title).setMessage(msg).setPositiveButton("OK", null).show();
+        new ModernDialog(activity).setTitle(title).setMessage(msg).setPositiveButton(activity.getString(R.string.ok), null).show();
     }
 
     /** Confronto numerico di versioni "1.2.10" > "1.2.9". */
