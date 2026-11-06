@@ -32,6 +32,8 @@ public class LiveView {
     /** Con password errata si riprova di rado: gli NVR Dahua bloccano l'account dopo pochi tentativi. */
     private static final int AUTH_RETRY_MS = 120000;
     private static final int WATCHDOG_MS = 15000;
+    /** Ritardo massimo del video rispetto al flusso ricevuto prima di ripartire dal presente. */
+    private static final int MAX_LAG_MS = 15000;
 
     public final FrameLayout root;
     private final Context ctx;
@@ -57,6 +59,12 @@ public class LiveView {
         public void run() {
             if (player == null) return;
             long pos = player.getCurrentPosition();
+            if (player.getBufferedPosition() - pos > MAX_LAG_MS) {
+                // il decoder è rimasto indietro: per un live si riparte dal presente invece di
+                // accumulare video in memoria
+                start();
+                return;
+            }
             if (player.getPlaybackState() != Player.STATE_READY || pos == lastPosition) {
                 retry(App.s(R.string.live_no_signal));
                 return;
@@ -126,12 +134,30 @@ public class LiveView {
         return hint;
     }
 
+    /**
+     * Avvia o riavvia il flusso. Il player resta lo stesso tra un tentativo e l'altro: crearne
+     * uno nuovo a ogni riconnessione lasciava thread e decoder in sospeso e appesantiva la TV.
+     */
     public void start() {
-        stop();
+        handler.removeCallbacksAndMessages(null);
         if (hdStage == 0) {
             status.setText(R.string.live_connecting);
             status.setVisibility(View.VISIBLE);
         }
+        if (player == null) createPlayer();
+        else player.stop();
+        RtspMediaSource source = new RtspMediaSource.Factory()
+                .setForceUseRtpTcp(true)
+                .setTimeoutMs(8000)
+                .createMediaSource(MediaItem.fromUri(cam.url(!isHd() ? 1 : hdStage == 1 ? 2 : 0)));
+        player.setMediaSource(source);
+        player.setPlayWhenReady(true);
+        player.prepare();
+        lastPosition = -1;
+        handler.postDelayed(watchdog, WATCHDOG_MS);
+    }
+
+    private void createPlayer() {
         DefaultLoadControl lowLatency = new DefaultLoadControl.Builder()
                 .setBufferDurationsMs(500, 2000, 250, 250)
                 .build();
@@ -140,6 +166,11 @@ public class LiveView {
         DefaultRenderersFactory renderers = new DefaultRenderersFactory(ctx).setEnableDecoderFallback(true);
         player = new ExoPlayer.Builder(ctx, renderers).setLoadControl(lowLatency).build();
         player.setVolume(hd ? 1f : 0f);
+        if (!hd) {
+            // in griglia l'audio non si sente: non si decodifica, per alleggerire la TV
+            player.setTrackSelectionParameters(player.getTrackSelectionParameters().buildUpon()
+                    .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, true).build());
+        }
         playerView.setPlayer(player);
         player.addListener(new Player.Listener() {
             @Override
@@ -179,15 +210,6 @@ public class LiveView {
                 retry(describe(e));
             }
         });
-        RtspMediaSource source = new RtspMediaSource.Factory()
-                .setForceUseRtpTcp(true)
-                .setTimeoutMs(8000)
-                .createMediaSource(MediaItem.fromUri(cam.url(!isHd() ? 1 : hdStage == 1 ? 2 : 0)));
-        player.setMediaSource(source);
-        player.setPlayWhenReady(true);
-        player.prepare();
-        lastPosition = -1;
-        handler.postDelayed(watchdog, WATCHDOG_MS);
     }
 
     /** Flusso HD non riproducibile: prima il flusso extra Dahua, poi LD. */

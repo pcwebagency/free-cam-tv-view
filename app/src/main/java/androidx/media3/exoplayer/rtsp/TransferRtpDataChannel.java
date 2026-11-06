@@ -36,6 +36,9 @@ import java.util.concurrent.LinkedBlockingQueue;
   private static final String DEFAULT_TCP_TRANSPORT_FORMAT =
       "RTP/AVP/TCP;unicast;interleaved=%d-%d";
 
+  /** Patch: circa 4 MB di pacchetti RTP in attesa per canale. */
+  private static final int MAX_QUEUED_PACKETS = 3000;
+
   private final LinkedBlockingQueue<byte[]> packetQueue;
   private final long pollTimeoutMs;
 
@@ -130,6 +133,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 
   @Override
   public void onInterleavedBinaryDataReceived(byte[] data) {
+    // Patch: coda limitata. Se il decoder non tiene il passo (TV lenta, molti flussi) i pacchetti
+    // si accumulavano senza limite fino a esaurire la memoria: si scartano i più vecchi.
+    while (packetQueue.size() >= MAX_QUEUED_PACKETS) {
+      packetQueue.poll();
+    }
     packetQueue.add(data);
   }
 }

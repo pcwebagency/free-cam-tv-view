@@ -2,6 +2,13 @@
 
 Tutte le modifiche rilevanti del progetto sono documentate in questo file.
 
+## [1.0.6] — 2026-11-06
+
+### Correzioni
+- L'app non diventa più pesante dopo un uso prolungato: cambiando pagina o layout le connessioni vengono riutilizzate invece di accumularsi
+- Memoria limitata anche quando la TV non riesce a decodificare tutti i flussi in tempo
+- Meno distacchi nelle griglie grandi: audio non decodificato in griglia (si sente solo a schermo intero) e più tolleranza ai rallentamenti prima di riconnettere
+
 ## [1.0.5] — 2026-11-05
 
 ### Novità
