@@ -9,6 +9,11 @@
   Sviluppata da <a href="https://www.pcwebagency.it">PC Web Agency</a>.
 </p>
 
+<p align="center">
+  <a href="https://www.amazon.it/dp/B0HQCFX3YN"><img src="https://img.shields.io/badge/Amazon_Appstore-Disponibile-FF9900?style=for-the-badge&logo=amazon&logoColor=white" alt="Disponibile su Amazon Appstore"></a>
+  <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/pcwebagency/free-cam-tv-view?style=for-the-badge&label=APK&color=2ea44f" alt="Ultima versione APK"></a>
+</p>
+
 ---
 
 **Free Cam TV View** è un'app per Android TV e Fire TV, leggera e pensata per il telecomando, che mostra in tempo reale le telecamere della rete locale o di sedi remote. Riconosce automaticamente i dispositivi Dahua (telecamere IP, NVR/XVR, videocitofoni) e accetta qualsiasi flusso RTSP standard.
@@ -48,24 +53,30 @@ I monitor interni dei videocitofoni (VTH) vengono riconosciuti ma non aggiunti, 
 
 ## Installazione
 
+### Da Amazon Appstore (Fire TV)
+
+Il modo più semplice su Fire TV: installa **Free Cam TV View** da [Amazon Appstore](https://www.amazon.it/dp/B0HQCFX3YN) oppure cercala dalla TV. Gli aggiornamenti arrivano dall'Appstore.
+
+### Da APK (Android TV e Fire TV)
+
 Scarica l'APK dalla pagina [Releases](../../releases).
 
-### Con ADB (consigliato)
+#### Con ADB
 
 1. Sulla TV attiva le opzioni sviluppatore. Su Fire TV: *Impostazioni → La mia Fire TV → Informazioni*, premi 7 volte sul nome del dispositivo, poi *Opzioni sviluppatore → Debug ADB*.
 2. Dal computer:
    ```bash
    adb connect IP_DELLA_TV:5555        # conferma "Consenti" sulla TV
-   adb install -r FreeCamTVView-1.0.1.apk
+   adb install -r FreeCamTVView-1.0.6.apk
    ```
 
-### Senza computer
+#### Senza computer
 
 Abilita *App da origini sconosciute* e installa l'APK con l'app **Downloader** o da una chiavetta USB.
 
 ### Aggiornamenti
 
-L'app controlla da sola le nuove versioni e propone l'aggiornamento all'avvio. Il controllo si può fare anche a mano da *≡ Menu → Informazioni e aggiornamenti*. Al primo aggiornamento Android chiede di consentire a «Free Cam TV View» l'installazione di app (Fire TV: *Opzioni sviluppatore → Installa app sconosciute*).
+Installata da Amazon Appstore, l'app si aggiorna dall'Appstore. Installata da APK, l'app controlla da sola le nuove versioni e propone l'aggiornamento all'avvio. Il controllo si può fare anche a mano da *≡ Menu → Informazioni e aggiornamenti*. Al primo aggiornamento Android chiede di consentire a «Free Cam TV View» l'installazione di app (Fire TV: *Opzioni sviluppatore → Installa app sconosciute*).
 
 ## Utilizzo
 
